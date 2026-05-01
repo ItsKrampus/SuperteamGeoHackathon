@@ -1,0 +1,380 @@
+import { useEffect, useState, useCallback } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { PublicKey } from '@solana/web3.js'
+import { db } from '@/lib/db'
+import { lamportsToSol, shortenAddress, ADMIN_PUBKEY } from '@/lib/solana'
+import { fetchJobAccount } from '@/lib/anchor/instructions'
+import {
+  acceptFreelancer,
+  submitWork,
+  releasePayment,
+  disputeJob,
+  cancelJob,
+} from '@/lib/anchor/instructions'
+import { mintReviewNft } from '@/lib/nft/mintReviewNft'
+import { Button } from '@/components/ui/button'
+import ReviewModal from '@/components/ReviewModal'
+
+const STATUS_LABELS = {
+  funded: 'Open — Accepting Applications',
+  inProgress: 'In Progress',
+  submitted: 'Work Submitted — Awaiting Review',
+  released: 'Completed & Paid',
+  disputed: 'Disputed',
+  cancelled: 'Cancelled',
+}
+
+export default function JobDetail() {
+  const { id } = useParams()
+  const [clientWallet, jobId] = id.split('_')
+  const wallet = useWallet()
+  const { publicKey, connected } = wallet
+  const { connection } = useConnection()
+
+  const [job, setJob] = useState(null)
+  const [onChain, setOnChain] = useState(null)
+  const [applications, setApplications] = useState([])
+  const [coverLetter, setCoverLetter] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [reviewLoading, setReviewLoading] = useState(false)
+
+  const isClient = connected && publicKey?.toBase58() === clientWallet
+  const isFreelancer =
+    connected && job?.freelancerWallet && publicKey?.toBase58() === job.freelancerWallet
+
+  const refresh = useCallback(async () => {
+    const jobData = await db.jobs.get(clientWallet, jobId)
+    setJob(jobData)
+    const apps = await db.applications.listForJob(clientWallet, jobId)
+    setApplications(apps)
+
+    if (jobData?.jobAccountPda && connected) {
+      try {
+        const acc = await fetchJobAccount(
+          wallet,
+          connection,
+          new PublicKey(jobData.jobAccountPda)
+        )
+        setOnChain(acc)
+      } catch {
+        setOnChain(null)
+      }
+    }
+    setLoading(false)
+  }, [clientWallet, jobId, connected, wallet, connection])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  async function handleApply(e) {
+    e.preventDefault()
+    await db.applications.create({
+      clientWallet,
+      jobId,
+      freelancerWallet: publicKey.toBase58(),
+      coverLetter,
+    })
+    setCoverLetter('')
+    refresh()
+  }
+
+  async function handleAction(action) {
+    setActionLoading(true)
+    try {
+      const jobPda = new PublicKey(job.jobAccountPda)
+
+      if (action === 'accept') {
+        const app = applications.find((a) => a.status === 'pending')
+        if (!app) return
+        await acceptFreelancer(wallet, connection, {
+          jobPda,
+          freelancerPubkey: new PublicKey(app.freelancerWallet),
+        })
+        await db.jobs.update(clientWallet, jobId, {
+          status: 'inProgress',
+          freelancerWallet: app.freelancerWallet,
+        })
+        await db.applications.updateStatus(app.id, 'accepted')
+      } else if (action === 'submit') {
+        await submitWork(wallet, connection, { jobPda })
+        await db.jobs.update(clientWallet, jobId, { status: 'submitted' })
+      } else if (action === 'release') {
+        await releasePayment(wallet, connection, {
+          jobPda,
+          freelancerPubkey: new PublicKey(job.freelancerWallet),
+        })
+        await db.jobs.update(clientWallet, jobId, { status: 'released' })
+        setShowReviewModal(true)
+      } else if (action === 'dispute') {
+        await disputeJob(wallet, connection, { jobPda })
+        await db.jobs.update(clientWallet, jobId, { status: 'disputed' })
+      } else if (action === 'cancel') {
+        await cancelJob(wallet, connection, { jobPda })
+        await db.jobs.update(clientWallet, jobId, { status: 'cancelled' })
+      }
+      refresh()
+    } catch (err) {
+      console.error(`Action ${action} failed:`, err)
+      alert(`Failed: ${err.message}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleReviewSubmit({ rating, comment }) {
+    setReviewLoading(true)
+    try {
+      const { mintAddress, txSig } = await mintReviewNft(wallet, connection, {
+        freelancerPubkey: new PublicKey(job.freelancerWallet),
+        rating,
+        comment,
+        jobId,
+        clientWallet,
+      })
+
+      await db.reviews.create({
+        jobId,
+        freelancerWallet: job.freelancerWallet,
+        clientWallet,
+        rating,
+        comment,
+        mintAddress,
+        txSig,
+      })
+
+      setShowReviewModal(false)
+      refresh()
+    } catch (err) {
+      console.error('NFT mint failed:', err)
+      alert(`Review mint failed: ${err.message}. Review saved without NFT.`)
+      setShowReviewModal(false)
+    } finally {
+      setReviewLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 pt-24">
+        <p className="text-neutral-500">Loading...</p>
+      </div>
+    )
+  }
+
+  if (!job) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 pt-24">
+        <p className="text-neutral-500">Job not found.</p>
+      </div>
+    )
+  }
+
+  return (
+    <main className="pt-16 min-h-screen">
+      <div className="max-w-7xl mx-auto p-6 lg:p-10">
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2 py-0.5 bg-neutral-800 text-[#537aff] text-[10px] font-bold uppercase tracking-widest border border-neutral-700 rounded">
+                {job.status === 'funded' ? 'Active Listing' : job.status}
+              </span>
+            </div>
+            <h1 className="font-display text-3xl font-bold text-white mb-2">{job.title}</h1>
+            <p className="text-neutral-400 max-w-2xl">{job.description}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {isClient && job.status === 'funded' && !job.freelancerWallet && (
+              <Button variant="outline" onClick={() => handleAction('cancel')} disabled={actionLoading}>
+                Cancel & Refund
+              </Button>
+            )}
+            {isClient && job.status === 'funded' && applications.some((a) => a.status === 'pending') && (
+              <Button variant="brand" onClick={() => handleAction('accept')} disabled={actionLoading}>
+                Accept Top Applicant
+              </Button>
+            )}
+            {isFreelancer && job.status === 'inProgress' && (
+              <Button variant="brand" onClick={() => handleAction('submit')} disabled={actionLoading}>
+                Submit Work
+              </Button>
+            )}
+            {isClient && job.status === 'submitted' && (
+              <Button variant="brand" onClick={() => handleAction('release')} disabled={actionLoading}>
+                Release Payment
+              </Button>
+            )}
+            {(isClient || isFreelancer) && (job.status === 'inProgress' || job.status === 'submitted') && (
+              <Button variant="destructive" onClick={() => handleAction('dispute')} disabled={actionLoading}>
+                Dispute
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <section className="bg-[#1a1a1a] border border-neutral-800 p-8 rounded-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#e63b2e]/10 to-transparent"></div>
+              <h2 className="font-display text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#e63b2e]">verified_user</span>
+                Job Details
+              </h2>
+              <div className="text-neutral-300 whitespace-pre-wrap mb-6">{job.description}</div>
+
+              {job.tags?.length > 0 && (
+                <div>
+                  <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-4">Required Stack</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {job.tags.map((tag) => (
+                      <span key={tag} className="px-4 py-2 bg-neutral-900 border border-neutral-800 text-xs font-display text-white rounded uppercase">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {job.freelancerWallet && (
+                <div className="mt-6 flex items-center gap-3 p-4 bg-neutral-900/50 border border-neutral-800 rounded">
+                  <span className="material-symbols-outlined text-[#537aff]">person</span>
+                  <div>
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-widest">Assigned Freelancer</p>
+                    <Link to={`/profile/${job.freelancerWallet}`} className="text-white font-mono text-sm hover:text-[#e63b2e] transition-colors">
+                      {shortenAddress(job.freelancerWallet)}
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-neutral-800 rounded flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[#537aff]">schedule</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-widest">Escrow Type</p>
+                    <p className="text-white font-bold">Full Upfront</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-neutral-800 rounded flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[#537aff]">work_outline</span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-widest">Commitment</p>
+                    <p className="text-white font-bold">Project Based</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {job.status === 'funded' && (
+              <section className="bg-[#1a1a1a] border border-neutral-800 p-8 rounded-lg">
+                <h2 className="font-display text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-neutral-400">description</span>
+                  Applications ({applications.length})
+                </h2>
+                <div className="space-y-4">
+                  {applications.map((app) => (
+                    <div key={app.id} className="p-4 bg-[#1a1a1a]/50 border border-neutral-800 hover:border-neutral-600 rounded transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <Link to={`/profile/${app.freelancerWallet}`} className="font-display text-sm font-medium text-white font-mono hover:text-[#e63b2e] transition-colors">
+                            {shortenAddress(app.freelancerWallet)}
+                          </Link>
+                          <p className="text-neutral-400 text-sm mt-1">{app.coverLetter}</p>
+                        </div>
+                        <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-neutral-500">{app.status}</span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {connected && !isClient && (
+                    <form onSubmit={handleApply} className="space-y-3 border-t border-neutral-800 pt-4">
+                      <textarea
+                        className="w-full rounded border border-white/10 bg-white/5 text-white focus:border-[#e63b2e] focus:ring-1 focus:ring-[#e63b2e] px-4 py-2 text-sm min-h-[80px]"
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                        placeholder="Why are you a good fit for this job?"
+                        required
+                      />
+                      <Button type="submit" variant="brand">Apply</Button>
+                    </form>
+                  )}
+                </div>
+              </section>
+            )}
+          </div>
+
+          <aside className="space-y-6">
+            <div className="bg-[#1a1a1a] border border-neutral-800 p-8 rounded-lg">
+              <p className="text-xs text-neutral-500 uppercase tracking-[0.2em] mb-2 font-bold">Total Budget</p>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl font-black text-white font-display tracking-tighter">{lamportsToSol(job.amount)}</span>
+                <span className="text-xl text-neutral-400 font-bold tracking-tight">SOL</span>
+              </div>
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between items-center py-3 border-b border-neutral-800">
+                  <span className="text-xs text-neutral-500 uppercase font-medium">Escrow Status</span>
+                  <span className="flex items-center gap-1.5 text-[#e63b2e] text-xs font-bold uppercase">
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                    {STATUS_LABELS[job.status] || job.status}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-neutral-800">
+                  <span className="text-xs text-neutral-500 uppercase font-medium">Platform Fee</span>
+                  <span className="text-xs text-neutral-300">0.00%</span>
+                </div>
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-xs text-neutral-500 uppercase font-medium">Client</span>
+                  <Link to={`/profile/${job.clientWallet}`} className="text-xs text-white font-mono hover:text-[#e63b2e] transition-colors">
+                    {shortenAddress(job.clientWallet)}
+                  </Link>
+                </div>
+              </div>
+              <div className="bg-neutral-900 border border-neutral-800 p-4 rounded">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-[#537aff]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <div>
+                    <p className="text-xs font-bold text-white mb-1">Guaranteed Payment</p>
+                    <p className="text-[10px] text-neutral-500 leading-relaxed">Funds are locked in a smart contract and released upon milestone completion.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {actionLoading && (
+              <div className="p-4 border border-[#537aff]/20 bg-[#537aff]/5 rounded-lg">
+                <p className="text-[10px] text-[#537aff] font-bold uppercase tracking-widest mb-1">Processing</p>
+                <p className="text-xs text-neutral-400">Confirm in Phantom...</p>
+              </div>
+            )}
+
+            <div className="p-4 border border-[#537aff]/20 bg-[#537aff]/5 rounded-lg">
+              <p className="text-[10px] text-[#537aff] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">info</span>
+                Security Note
+              </p>
+              <p className="text-xs text-neutral-400 leading-relaxed">All transactions require wallet confirmation. Funds are secured by the Solana blockchain.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <ReviewModal
+        open={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        onSubmit={handleReviewSubmit}
+        loading={reviewLoading}
+      />
+    </main>
+  )
+}
