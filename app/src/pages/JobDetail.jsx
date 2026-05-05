@@ -15,6 +15,7 @@ import {
 import { mintReviewNft } from '@/lib/nft/mintReviewNft'
 import { Button } from '@/components/ui/button'
 import ReviewModal from '@/components/ReviewModal'
+import { useProfile } from '@/contexts/ProfileContext'
 
 const STATUS_LABELS = {
   funded: 'Open — Accepting Applications',
@@ -40,8 +41,10 @@ export default function JobDetail() {
   const [actionLoading, setActionLoading] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
+  const { profile } = useProfile()
 
   const isClient = connected && publicKey?.toBase58() === clientWallet
+  const canApply = connected && !isClient && profile?.role !== 'client'
   const isFreelancer =
     connected && job?.freelancerWallet && publicKey?.toBase58() === job.freelancerWallet
 
@@ -297,7 +300,7 @@ export default function JobDetail() {
                     </div>
                   ))}
 
-                  {connected && !isClient && (
+                  {canApply && (
                     <form onSubmit={handleApply} className="space-y-3 border-t border-neutral-800 pt-4">
                       <textarea
                         className="w-full rounded border border-white/10 bg-white/5 text-white focus:border-[#e63b2e] focus:ring-1 focus:ring-[#e63b2e] px-4 py-2 text-sm min-h-[80px]"
