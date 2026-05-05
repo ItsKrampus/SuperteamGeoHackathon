@@ -4,6 +4,8 @@ export const ADMIN_PUBKEY = new PublicKey(
   import.meta.env.VITE_ADMIN_PUBKEY || 'AXmQfo1Gi9Cbxn64kcrNbQoMPkjedXLfSzENv5oVAYMa'
 )
 
+export const SOLANA_NETWORK = import.meta.env.VITE_SOLANA_NETWORK || 'devnet'
+
 export const RPC_URL =
   import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.devnet.solana.com'
 

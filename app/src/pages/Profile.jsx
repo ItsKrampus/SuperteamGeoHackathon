@@ -2,53 +2,115 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { db } from '@/lib/db'
-import { shortenAddress, lamportsToSol } from '@/lib/solana'
+import { shortenAddress, lamportsToSol, SOLANA_NETWORK } from '@/lib/solana'
 import { Button } from '@/components/ui/button'
+import { useProfile } from '@/contexts/ProfileContext'
+import { useOnChainProfile } from '@/hooks/useOnChainProfile'
+import { useOnChainReviews } from '@/hooks/useOnChainReviews'
+import OnboardingModal from '@/components/OnboardingModal'
 
 export default function Profile() {
   const { wallet: walletParam } = useParams()
   const { publicKey, connected } = useWallet()
   const isOwn = connected && publicKey?.toBase58() === walletParam
 
-  const [profile, setProfile] = useState(null)
+  const { profile: ownProfile, needsOnboarding, updateProfile, mintAddress, loading: profileLoading } = useProfile()
+  const { profile: otherProfile, loading: otherLoading } = useOnChainProfile(isOwn ? null : walletParam)
+  const { reviews: onChainReviews, loading: reviewsLoading } = useOnChainReviews(walletParam)
+
+  const profile = isOwn ? ownProfile : otherProfile
+  const loading = isOwn ? profileLoading : otherLoading
+
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ displayName: '', bio: '', skills: '', role: 'both' })
-  const [reviews, setReviews] = useState([])
+  const [localReviews, setLocalReviews] = useState([])
   const [jobs, setJobs] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
-    db.profiles.get(walletParam).then((p) => {
-      setProfile(p)
-      if (p) {
-        setForm({
-          displayName: p.displayName || '',
-          bio: p.bio || '',
-          skills: (p.skills || []).join(', '),
-          role: p.role || 'both',
-        })
-      }
-    })
-    db.reviews.listForFreelancer(walletParam).then(setReviews)
+    if (profile) {
+      setForm({
+        displayName: profile.displayName || '',
+        bio: profile.bio || '',
+        skills: (profile.skills || []).join(', '),
+        role: profile.role || 'both',
+      })
+    }
+  }, [profile])
+
+  useEffect(() => {
+    db.reviews.listForFreelancer(walletParam).then(setLocalReviews)
     db.jobs.list({ clientWallet: walletParam }).then(setJobs)
   }, [walletParam])
 
+  useEffect(() => {
+    if (isOwn && needsOnboarding && !loading) {
+      setShowOnboarding(true)
+    }
+  }, [isOwn, needsOnboarding, loading])
+
+  // Merge on-chain and localStorage reviews, deduplicate by mintAddress
+  const reviews = (() => {
+    const byMint = new Map()
+    for (const r of onChainReviews) {
+      byMint.set(r.mintAddress, r)
+    }
+    for (const r of localReviews) {
+      if (r.mintAddress && !byMint.has(r.mintAddress)) {
+        byMint.set(r.mintAddress, r)
+      } else if (!r.mintAddress) {
+        byMint.set(r.id, r)
+      }
+    }
+    return Array.from(byMint.values())
+  })()
+
   async function handleSave(e) {
     e.preventDefault()
-    const data = {
-      displayName: form.displayName,
-      bio: form.bio,
-      skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
-      role: form.role,
+    setSaving(true)
+    try {
+      const data = {
+        displayName: form.displayName,
+        bio: form.bio,
+        skills: form.skills,
+        role: form.role,
+      }
+      if (mintAddress) {
+        await updateProfile(data)
+      } else {
+        await db.profiles.upsert(walletParam, {
+          ...data,
+          skills: data.skills.split(',').map((s) => s.trim()).filter(Boolean),
+        })
+      }
+      setEditing(false)
+    } catch (err) {
+      console.error('Profile save failed:', err)
+    } finally {
+      setSaving(false)
     }
-    const updated = await db.profiles.upsert(walletParam, data)
-    setProfile(updated)
-    setEditing(false)
   }
 
   const inputClass = "w-full bg-zinc-800 border-zinc-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-[#e63b2e] focus:border-transparent outline-none transition-all duration-200 text-sm"
 
+  if (loading) {
+    return (
+      <main className="pt-16 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[#e63b2e] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-zinc-400 font-display">Loading on-chain profile...</p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="pt-16 min-h-screen">
+      {showOnboarding && (
+        <OnboardingModal onClose={() => setShowOnboarding(false)} />
+      )}
+
       <div className="max-w-7xl mx-auto p-6 lg:p-10">
         <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex items-start gap-6">
@@ -56,7 +118,7 @@ export default function Profile() {
               <div className="w-32 h-32 rounded-lg bg-zinc-800 border-4 border-zinc-800 shadow-2xl flex items-center justify-center">
                 <span className="material-symbols-outlined text-5xl text-zinc-600">person</span>
               </div>
-              {profile?.role && (
+              {profile?.onChain && (
                 <div className="absolute -bottom-2 -right-2 bg-[#e63b2e] text-white p-1.5 rounded-full shadow-lg border-2 border-zinc-900">
                   <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                 </div>
@@ -72,6 +134,11 @@ export default function Profile() {
                     {profile.role === 'both' ? 'Verified Member' : `Verified ${profile.role}`}
                   </span>
                 )}
+                {profile?.onChain && (
+                  <span className="font-display text-[10px] bg-[#e63b2e]/10 text-[#e63b2e] px-3 py-1 rounded-full uppercase border border-[#e63b2e]/30">
+                    On-Chain Identity
+                  </span>
+                )}
                 <span className="flex items-center gap-1 text-[#e63b2e] font-display text-[10px] uppercase">
                   <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
                   {shortenAddress(walletParam)}
@@ -83,7 +150,7 @@ export default function Profile() {
             </div>
           </div>
           <div className="pb-1">
-            {isOwn && !editing && (
+            {isOwn && !editing && profile && (
               <button
                 onClick={() => setEditing(true)}
                 className="font-display text-sm font-bold tracking-widest border-2 border-zinc-700 hover:border-[#e63b2e] hover:text-[#e63b2e] px-8 py-3 rounded-lg transition-all active:scale-95 uppercase"
@@ -92,7 +159,7 @@ export default function Profile() {
               </button>
             )}
             {!profile && isOwn && (
-              <Button variant="brand" onClick={() => setEditing(true)} size="lg">
+              <Button variant="brand" onClick={() => setShowOnboarding(true)} size="lg">
                 Create Profile
               </Button>
             )}
@@ -101,15 +168,18 @@ export default function Profile() {
 
         {editing && (
           <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-lg mb-8">
-            <h2 className="font-display text-xl font-semibold text-white mb-6">Edit Profile</h2>
+            <h2 className="font-display text-xl font-semibold text-white mb-2">Edit Profile</h2>
+            {mintAddress && (
+              <p className="text-xs text-zinc-500 mb-6">Changes will be saved on-chain (requires transaction signing).</p>
+            )}
             <form onSubmit={handleSave} className="space-y-6">
               <div className="space-y-2">
                 <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Display Name</label>
-                <input className={inputClass} value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} placeholder="Your display name" />
+                <input className={inputClass} value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} placeholder="Your display name" maxLength={50} />
               </div>
               <div className="space-y-2">
                 <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Bio</label>
-                <textarea className={`${inputClass} min-h-[80px]`} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Tell clients about your expertise..." />
+                <textarea className={`${inputClass} min-h-[80px]`} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Tell clients about your expertise..." maxLength={200} />
               </div>
               <div className="space-y-2">
                 <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Skills (comma-separated)</label>
@@ -124,8 +194,10 @@ export default function Profile() {
                 </select>
               </div>
               <div className="flex gap-3">
-                <Button type="submit" variant="brand">Save</Button>
-                <Button variant="outline" type="button" onClick={() => setEditing(false)}>Cancel</Button>
+                <Button type="submit" variant="brand" disabled={saving}>
+                  {saving ? 'Saving...' : mintAddress ? 'Save On-Chain' : 'Save'}
+                </Button>
+                <Button variant="outline" type="button" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
               </div>
             </form>
           </div>
@@ -207,20 +279,25 @@ export default function Profile() {
               </section>
             )}
 
-            {reviews.length > 0 && (
+            {(reviews.length > 0 || reviewsLoading) && (
               <section className="bg-[#242424] p-6 rounded-xl border border-zinc-800">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="font-display text-lg font-semibold tracking-tight">Soulbound Reviews</h2>
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[#e63b2e]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                     <span className="font-display text-white font-semibold">
-                      {(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}
+                      {reviews.length > 0
+                        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+                        : '—'}
                     </span>
                   </div>
                 </div>
+                {reviewsLoading && reviews.length === 0 && (
+                  <p className="text-sm text-zinc-500">Fetching on-chain reviews...</p>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {reviews.map((r) => (
-                    <div key={r.id} className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 flex flex-col justify-between">
+                  {reviews.map((r, idx) => (
+                    <div key={r.mintAddress || r.id || idx} className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-1">
@@ -234,9 +311,18 @@ export default function Profile() {
                               </span>
                             ))}
                           </div>
-                          {r.mintAddress && (
+                          {r.onChain ? (
+                            <a
+                              href={`https://explorer.solana.com/address/${r.mintAddress}?cluster=${SOLANA_NETWORK}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-display text-[9px] bg-[#e63b2e]/10 text-[#e63b2e] px-2 py-0.5 rounded uppercase border border-[#e63b2e]/30 hover:bg-[#e63b2e]/20 transition-colors"
+                            >
+                              Verified On-Chain
+                            </a>
+                          ) : r.mintAddress ? (
                             <span className="font-display text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded uppercase border border-zinc-700">Verified SBT</span>
-                          )}
+                          ) : null}
                         </div>
                         {r.comment && (
                           <p className="text-sm italic text-zinc-300 leading-relaxed">"{r.comment}"</p>
