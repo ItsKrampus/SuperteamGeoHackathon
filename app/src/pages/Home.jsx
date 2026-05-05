@@ -2,9 +2,12 @@ import { Link } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
+import { useProfile } from '@/contexts/ProfileContext'
 
 export default function Home() {
   const { connected } = useWallet()
+  const { profile } = useProfile()
+  const canPost = !profile?.role || profile.role !== 'freelancer'
 
   return (
     <main className="pt-16">
@@ -38,9 +41,11 @@ export default function Home() {
                     <span className="material-symbols-outlined">arrow_forward</span>
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/jobs/new">Post a Job</Link>
-                </Button>
+                {canPost && (
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/jobs/new">Post a Job</Link>
+                  </Button>
+                )}
               </>
             ) : (
               <div className="flex flex-col items-center gap-4">
@@ -144,9 +149,11 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               {connected ? (
                 <>
-                  <Link to="/jobs/new" className="bg-white text-[#e63b2e] px-8 py-4 font-display font-bold uppercase tracking-tighter hover:bg-neutral-100 transition-all active:scale-95">
-                    Post Your First Job
-                  </Link>
+                  {canPost && (
+                    <Link to="/jobs/new" className="bg-white text-[#e63b2e] px-8 py-4 font-display font-bold uppercase tracking-tighter hover:bg-neutral-100 transition-all active:scale-95">
+                      Post Your First Job
+                    </Link>
+                  )}
                   <Link to="/jobs" className="border border-white text-white px-8 py-4 font-display font-bold uppercase tracking-tighter hover:bg-white/10 transition-all active:scale-95">
                     Browse Active Jobs
                   </Link>

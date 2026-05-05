@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { db } from '@/lib/db'
 import { createJob } from '@/lib/anchor/instructions'
 import { solToLamports } from '@/lib/solana'
 import { Button } from '@/components/ui/button'
+import { useProfile } from '@/contexts/ProfileContext'
 
 export default function NewJob() {
   const { publicKey, connected } = useWallet()
   const wallet = useWallet()
   const { connection } = useConnection()
   const navigate = useNavigate()
+  const { profile } = useProfile()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -25,6 +27,17 @@ export default function NewJob() {
     return (
       <div className="max-w-2xl mx-auto p-8 pt-24 text-center">
         <p className="text-neutral-400">Connect your wallet to post a job.</p>
+      </div>
+    )
+  }
+
+  if (profile?.role === 'freelancer') {
+    return (
+      <div className="max-w-2xl mx-auto p-8 pt-24 text-center">
+        <p className="text-neutral-400 mb-4">Only clients can post jobs.</p>
+        <Button asChild variant="brand">
+          <Link to="/jobs">Browse Jobs</Link>
+        </Button>
       </div>
     )
   }

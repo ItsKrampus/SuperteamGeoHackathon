@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { db } from '@/lib/db'
 import { lamportsToSol, shortenAddress } from '@/lib/solana'
 import { Button } from '@/components/ui/button'
+import { useProfile } from '@/contexts/ProfileContext'
 
 const statusStyles = {
   funded: 'bg-[#1a1a1a] text-[#e63b2e] border border-[#e63b2e]',
@@ -16,6 +17,8 @@ const statusStyles = {
 const CATEGORIES = ['Smart Contracts', 'Frontend Dev', 'UI/UX Design', 'Backend', 'Security']
 
 export default function Jobs() {
+  const { profile } = useProfile()
+  const canPost = !profile?.role || profile.role !== 'freelancer'
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -23,7 +26,7 @@ export default function Jobs() {
   const [sortBy, setSortBy] = useState('recent')
 
   useEffect(() => {
-    db.jobs.list().then((data) => {
+    db.jobs.list({ status: 'funded' }).then((data) => {
       setJobs(data)
       setLoading(false)
     })
@@ -88,9 +91,11 @@ export default function Jobs() {
               <option value="recent">Most Recent</option>
               <option value="budget">Highest Budget</option>
             </select>
-            <Button asChild variant="brand">
-              <Link to="/jobs/new">Post a Job</Link>
-            </Button>
+            {canPost && (
+              <Button asChild variant="brand">
+                <Link to="/jobs/new">Post a Job</Link>
+              </Button>
+            )}
           </div>
         </header>
 
@@ -129,9 +134,11 @@ export default function Jobs() {
             {sorted.length === 0 ? (
               <div className="bg-[#1f1f1f] border border-neutral-800 p-12 text-center">
                 <p className="text-neutral-400 mb-4">No jobs found.</p>
-                <Button asChild variant="brand">
-                  <Link to="/jobs/new">Be the first to post</Link>
-                </Button>
+                {canPost && (
+                  <Button asChild variant="brand">
+                    <Link to="/jobs/new">Be the first to post</Link>
+                  </Button>
+                )}
               </div>
             ) : (
               sorted.map((job) => (

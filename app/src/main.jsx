@@ -6,9 +6,6 @@ import { RPC_URL } from './lib/solana'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import './index.css'
 import App from './App.jsx'
-import { seedDemoData } from './lib/db/seed'
-
-seedDemoData()
 
 function Providers({ children }) {
   const endpoint = useMemo(() => RPC_URL, [])

@@ -85,24 +85,34 @@ export default function JobDetail() {
     refresh()
   }
 
+  async function handleAccept(app) {
+    setActionLoading(true)
+    try {
+      const jobPda = new PublicKey(job.jobAccountPda)
+      await acceptFreelancer(wallet, connection, {
+        jobPda,
+        freelancerPubkey: new PublicKey(app.freelancerWallet),
+      })
+      await db.jobs.update(clientWallet, jobId, {
+        status: 'inProgress',
+        freelancerWallet: app.freelancerWallet,
+      })
+      await db.applications.updateStatus(app.id, 'accepted')
+      refresh()
+    } catch (err) {
+      console.error('Accept freelancer failed:', err)
+      alert(`Failed: ${err.message}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   async function handleAction(action) {
     setActionLoading(true)
     try {
       const jobPda = new PublicKey(job.jobAccountPda)
 
-      if (action === 'accept') {
-        const app = applications.find((a) => a.status === 'pending')
-        if (!app) return
-        await acceptFreelancer(wallet, connection, {
-          jobPda,
-          freelancerPubkey: new PublicKey(app.freelancerWallet),
-        })
-        await db.jobs.update(clientWallet, jobId, {
-          status: 'inProgress',
-          freelancerWallet: app.freelancerWallet,
-        })
-        await db.applications.updateStatus(app.id, 'accepted')
-      } else if (action === 'submit') {
+      if (action === 'submit') {
         await submitWork(wallet, connection, { jobPda })
         await db.jobs.update(clientWallet, jobId, { status: 'submitted' })
       } else if (action === 'release') {
@@ -195,11 +205,6 @@ export default function JobDetail() {
                 Cancel & Refund
               </Button>
             )}
-            {isClient && job.status === 'funded' && applications.some((a) => a.status === 'pending') && (
-              <Button variant="brand" onClick={() => handleAction('accept')} disabled={actionLoading}>
-                Accept Top Applicant
-              </Button>
-            )}
             {isFreelancer && job.status === 'inProgress' && (
               <Button variant="brand" onClick={() => handleAction('submit')} disabled={actionLoading}>
                 Submit Work
@@ -289,13 +294,25 @@ export default function JobDetail() {
                   {applications.map((app) => (
                     <div key={app.id} className="p-4 bg-[#1a1a1a]/50 border border-neutral-800 hover:border-neutral-600 rounded transition-colors">
                       <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <Link to={`/profile/${app.freelancerWallet}`} className="font-display text-sm font-medium text-white font-mono hover:text-[#e63b2e] transition-colors">
                             {shortenAddress(app.freelancerWallet)}
                           </Link>
                           <p className="text-neutral-400 text-sm mt-1">{app.coverLetter}</p>
                         </div>
-                        <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-neutral-500">{app.status}</span>
+                        <div className="flex items-center gap-2 ml-4 shrink-0">
+                          {isClient && app.status === 'pending' && (
+                            <Button
+                              variant="brand"
+                              size="sm"
+                              onClick={() => handleAccept(app)}
+                              disabled={actionLoading}
+                            >
+                              Accept
+                            </Button>
+                          )}
+                          <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-neutral-500">{app.status}</span>
+                        </div>
                       </div>
                     </div>
                   ))}

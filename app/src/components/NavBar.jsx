@@ -34,10 +34,10 @@ export default function NavBar() {
               key={link.to}
               to={link.to}
               className={cn(
-                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200',
+                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200 border-b-2 pb-1',
                 location.pathname === link.to
-                  ? 'text-[#e63b2e] border-b-2 border-[#e63b2e] pb-1 font-bold'
-                  : 'text-neutral-400 hover:text-white'
+                  ? 'text-[#e63b2e] border-[#e63b2e] font-bold'
+                  : 'text-neutral-400 hover:text-white border-transparent'
               )}
             >
               {link.label}
@@ -47,10 +47,10 @@ export default function NavBar() {
             <Link
               to={`/profile/${publicKey.toBase58()}`}
               className={cn(
-                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200 flex items-center gap-1.5',
+                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200 flex items-center gap-1.5 border-b-2 pb-1',
                 location.pathname.startsWith('/profile')
-                  ? 'text-[#e63b2e] border-b-2 border-[#e63b2e] pb-1 font-bold'
-                  : 'text-neutral-400 hover:text-white'
+                  ? 'text-[#e63b2e] border-[#e63b2e] font-bold'
+                  : 'text-neutral-400 hover:text-white border-transparent'
               )}
             >
               {profile?.displayName || 'Profile'}
@@ -63,10 +63,10 @@ export default function NavBar() {
             <Link
               to="/admin/disputes"
               className={cn(
-                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200',
+                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200 border-b-2 pb-1',
                 location.pathname === '/admin/disputes'
-                  ? 'text-[#e63b2e] border-b-2 border-[#e63b2e] pb-1 font-bold'
-                  : 'text-neutral-400 hover:text-white'
+                  ? 'text-[#e63b2e] border-[#e63b2e] font-bold'
+                  : 'text-neutral-400 hover:text-white border-transparent'
               )}
             >
               Admin

@@ -300,14 +300,14 @@ export default function Profile() {
                     <div key={r.mintAddress || r.id || idx} className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             {Array.from({ length: 5 }, (_, i) => (
                               <span
                                 key={i}
-                                className="material-symbols-outlined text-xs text-[#e63b2e]"
-                                style={{ fontVariationSettings: "'FILL' 1" }}
+                                className={`material-symbols-outlined text-sm ${i < r.rating ? 'text-[#e63b2e]' : 'text-zinc-600'}`}
+                                style={{ fontVariationSettings: i < r.rating ? "'FILL' 1" : "'FILL' 0" }}
                               >
-                                {i < r.rating ? 'star' : 'star_half'}
+                                star
                               </span>
                             ))}
                           </div>
