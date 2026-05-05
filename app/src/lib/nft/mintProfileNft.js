@@ -19,26 +19,26 @@ import {
 import {
   createInitializeInstruction as createMetadataInitInstruction,
   createUpdateFieldInstruction,
-  createUpdateAuthorityInstruction as createMetadataUpdateAuthorityInstruction,
   pack as packTokenMetadata,
 } from '@solana/spl-token-metadata'
+import { PROF_SYMBOL } from './constants'
 
-export async function mintReviewNft(wallet, connection, review) {
-  const { freelancerPubkey, rating, comment, jobId, clientWallet } = review
+export async function mintProfileNft(wallet, connection, profileData) {
+  const { displayName, bio, skills, role } = profileData
   const payer = wallet.publicKey
 
   const mintKeypair = Keypair.generate()
   const mint = mintKeypair.publicKey
 
-  const name = `Review #${jobId.toString().slice(-6)}`
-  const symbol = 'REV'
+  const name = `Profile: ${displayName}`
+  const symbol = PROF_SYMBOL
   const uri = ''
   const additionalMetadata = [
-    ['rating', String(rating)],
-    ['comment', comment || ''],
-    ['jobId', String(jobId)],
-    ['client', clientWallet],
-    ['freelancer', freelancerPubkey.toBase58()],
+    ['displayName', displayName || ''],
+    ['bio', (bio || '').slice(0, 200)],
+    ['skills', Array.isArray(skills) ? skills.join(',') : (skills || '')],
+    ['role', role || 'both'],
+    ['createdAt', String(Date.now())],
   ]
 
   const mintLen = getMintLen([
@@ -55,13 +55,14 @@ export async function mintReviewNft(wallet, connection, review) {
     additionalMetadata,
   }).length
 
+  // Token-2022 stores metadata as a TLV entry: 2 bytes type + 2 bytes length + content
+  // Add extra buffer for TLV overhead and potential reallocation padding
   const lamports = await connection.getMinimumBalanceForRentExemption(
     mintLen + metadataLen + 68
   )
 
   const tx = new Transaction()
 
-  // 1. Create the mint account
   tx.add(
     SystemProgram.createAccount({
       fromPubkey: payer,
@@ -72,12 +73,10 @@ export async function mintReviewNft(wallet, connection, review) {
     })
   )
 
-  // 2. NonTransferable extension (MUST be before InitializeMint)
   tx.add(
     createInitializeNonTransferableMintInstruction(mint, TOKEN_2022_PROGRAM_ID)
   )
 
-  // 3. MetadataPointer extension — metadata lives on the mint itself
   tx.add(
     createInitializeMetadataPointerInstruction(
       mint,
@@ -87,7 +86,6 @@ export async function mintReviewNft(wallet, connection, review) {
     )
   )
 
-  // 4. Initialize the mint (decimals=0, supply will be 1)
   tx.add(
     createInitializeMintInstruction(
       mint,
@@ -98,7 +96,6 @@ export async function mintReviewNft(wallet, connection, review) {
     )
   )
 
-  // 5. Initialize on-mint metadata
   tx.add(
     createMetadataInitInstruction({
       programId: TOKEN_2022_PROGRAM_ID,
@@ -112,7 +109,6 @@ export async function mintReviewNft(wallet, connection, review) {
     })
   )
 
-  // 6. Add review fields to metadata
   for (const [key, value] of additionalMetadata) {
     tx.add(
       createUpdateFieldInstruction({
@@ -125,10 +121,9 @@ export async function mintReviewNft(wallet, connection, review) {
     )
   }
 
-  // 7. Create freelancer's ATA for Token-2022 mint
   const ata = getAssociatedTokenAddressSync(
     mint,
-    freelancerPubkey,
+    payer,
     false,
     TOKEN_2022_PROGRAM_ID
   )
@@ -136,18 +131,17 @@ export async function mintReviewNft(wallet, connection, review) {
     createAssociatedTokenAccountInstruction(
       payer,
       ata,
-      freelancerPubkey,
+      payer,
       mint,
       TOKEN_2022_PROGRAM_ID
     )
   )
 
-  // 8. Mint 1 token to freelancer
   tx.add(
     createMintToInstruction(mint, ata, payer, 1, [], TOKEN_2022_PROGRAM_ID)
   )
 
-  // 9. Remove mint authority — locks supply at 1 forever
+  // Revoke mint authority — locks supply at 1 forever
   tx.add(
     createSetAuthorityInstruction(
       mint,
@@ -159,15 +153,7 @@ export async function mintReviewNft(wallet, connection, review) {
     )
   )
 
-  // 10. Remove metadata update authority — makes metadata immutable
-  tx.add(
-    createMetadataUpdateAuthorityInstruction({
-      programId: TOKEN_2022_PROGRAM_ID,
-      metadata: mint,
-      oldAuthority: payer,
-      newAuthority: null,
-    })
-  )
+  // NOTE: We do NOT revoke metadata update authority — user keeps it for profile edits
 
   tx.feePayer = payer
   const { blockhash } = await connection.getLatestBlockhash()

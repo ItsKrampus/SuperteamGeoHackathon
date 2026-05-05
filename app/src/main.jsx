@@ -2,7 +2,7 @@ import { StrictMode, useMemo } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
-import { clusterApiUrl } from '@solana/web3.js'
+import { RPC_URL } from './lib/solana'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import './index.css'
 import App from './App.jsx'
@@ -11,7 +11,7 @@ import { seedDemoData } from './lib/db/seed'
 seedDemoData()
 
 function Providers({ children }) {
-  const endpoint = useMemo(() => clusterApiUrl('devnet'), [])
+  const endpoint = useMemo(() => RPC_URL, [])
 
   return (
     <ConnectionProvider endpoint={endpoint}>

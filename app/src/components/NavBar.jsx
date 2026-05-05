@@ -3,6 +3,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { Link, useLocation } from 'react-router-dom'
 import { ADMIN_PUBKEY } from '@/lib/solana'
 import { cn } from '@/lib/utils'
+import { useProfile } from '@/contexts/ProfileContext'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -14,6 +15,7 @@ const links = [
 export default function NavBar() {
   const { publicKey } = useWallet()
   const location = useLocation()
+  const { profile, needsOnboarding } = useProfile()
 
   const isAdmin = publicKey && publicKey.equals(ADMIN_PUBKEY)
 
@@ -44,13 +46,16 @@ export default function NavBar() {
             <Link
               to={`/profile/${publicKey.toBase58()}`}
               className={cn(
-                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200',
+                'font-display uppercase tracking-tighter text-sm transition-colors active:scale-95 duration-200 flex items-center gap-1.5',
                 location.pathname.startsWith('/profile')
                   ? 'text-[#e63b2e] border-b-2 border-[#e63b2e] pb-1 font-bold'
                   : 'text-neutral-400 hover:text-white'
               )}
             >
-              Profile
+              {profile?.displayName || 'Profile'}
+              {needsOnboarding && (
+                <span className="w-2 h-2 rounded-full bg-[#e63b2e] animate-pulse" />
+              )}
             </Link>
           )}
           {isAdmin && (
