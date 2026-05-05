@@ -28,7 +28,7 @@ export default function Home() {
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg text-neutral-400">
-            No signup. No email verification. No middleman fees. Your Solana wallet is your identity — profiles live on-chain as soulbound NFTs, payments are secured by smart contract escrow, and every review is permanently minted to the blockchain.
+            No signup. No middleman. Your wallet is your identity — payments secured by escrow, reputation minted as soulbound NFTs.
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-6">

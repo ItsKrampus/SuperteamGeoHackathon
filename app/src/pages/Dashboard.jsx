@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { db } from '@/lib/db'
 import { lamportsToSol, shortenAddress } from '@/lib/solana'
+import { useProfile } from '@/contexts/ProfileContext'
 
 export default function Dashboard() {
   const { publicKey, connected } = useWallet()
+  const { profile } = useProfile()
   const [clientJobs, setClientJobs] = useState([])
   const [freelancerJobs, setFreelancerJobs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -36,10 +38,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="pt-24 min-h-screen">
-        <div className="max-w-7xl mx-auto p-6">
-          <p className="text-neutral-500">Loading dashboard...</p>
-        </div>
+      <div className="pt-24 min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#e63b2e] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -47,7 +47,11 @@ export default function Dashboard() {
   const allJobs = [...clientJobs, ...freelancerJobs]
   const activeJobs = allJobs.filter((j) => ['funded', 'inProgress', 'submitted'].includes(j.status))
   const completedJobs = allJobs.filter((j) => j.status === 'released')
+  const isClientOnly = profile?.role === 'client'
   const totalEarned = freelancerJobs
+    .filter((j) => j.status === 'released')
+    .reduce((sum, j) => sum + Number(j.amount || 0), 0)
+  const totalSpent = clientJobs
     .filter((j) => j.status === 'released')
     .reduce((sum, j) => sum + Number(j.amount || 0), 0)
   const totalEscrowed = allJobs
@@ -73,8 +77,8 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col md:flex-row md:items-end gap-8">
               <div>
-                <p className="text-xs text-neutral-500 font-display uppercase mb-1">Total Earned</p>
-                <p className="text-4xl font-black text-white tracking-tighter">{lamportsToSol(totalEarned)} <span className="text-lg font-normal text-neutral-600">SOL</span></p>
+                <p className="text-xs text-neutral-500 font-display uppercase mb-1">{isClientOnly ? 'Total Spent' : 'Total Earned'}</p>
+                <p className="text-4xl font-black text-white tracking-tighter">{lamportsToSol(isClientOnly ? totalSpent : totalEarned)} <span className="text-lg font-normal text-neutral-600">SOL</span></p>
               </div>
               <div className="md:border-l border-neutral-800 md:pl-8">
                 <p className="text-xs text-neutral-500 font-display uppercase mb-1">In Escrow</p>

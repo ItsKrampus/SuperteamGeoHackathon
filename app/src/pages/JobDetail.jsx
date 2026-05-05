@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import ReviewModal from '@/components/ReviewModal'
 import { useProfile } from '@/contexts/ProfileContext'
 import { useOnChainProfile } from '@/hooks/useOnChainProfile'
+import { useOnChainProfiles } from '@/hooks/useOnChainProfiles'
 
 const STATUS_LABELS = {
   funded: 'Open — Accepting Applications',
@@ -54,9 +55,15 @@ export default function JobDetail() {
   const otherWallet = isClient ? job?.freelancerWallet : isFreelancer ? clientWallet : null
   const { profile: otherProfile } = useOnChainProfile(otherWallet)
 
+  const applicantWallets = applications.map((a) => a.freelancerWallet)
+  const { profiles: applicantProfiles } = useOnChainProfiles(applicantWallets)
+
   const nameMap = {}
   if (profile?.displayName && publicKey) nameMap[publicKey.toBase58()] = profile.displayName
   if (otherProfile?.displayName && otherWallet) nameMap[otherWallet] = otherProfile.displayName
+  for (const [addr, p] of Object.entries(applicantProfiles)) {
+    if (p?.displayName) nameMap[addr] = p.displayName
+  }
 
   const refresh = useCallback(async () => {
     const jobData = await db.jobs.get(clientWallet, jobId)
@@ -200,8 +207,8 @@ export default function JobDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-6 pt-24">
-        <p className="text-neutral-500">Loading...</p>
+      <div className="max-w-7xl mx-auto p-6 pt-24 flex justify-center">
+        <div className="w-8 h-8 border-2 border-[#e63b2e] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -279,8 +286,8 @@ export default function JobDetail() {
                   <span className="material-symbols-outlined text-[#537aff]">person</span>
                   <div>
                     <p className="text-[10px] text-neutral-500 uppercase tracking-widest">Assigned Freelancer</p>
-                    <Link to={`/profile/${job.freelancerWallet}`} className="text-white font-mono text-sm hover:text-[#e63b2e] transition-colors">
-                      {shortenAddress(job.freelancerWallet)}
+                    <Link to={`/profile/${job.freelancerWallet}`} className="text-white text-sm hover:text-[#e63b2e] transition-colors">
+                      {nameMap[job.freelancerWallet] || shortenAddress(job.freelancerWallet)}
                     </Link>
                   </div>
                 </div>
@@ -323,8 +330,8 @@ export default function JobDetail() {
                     <div key={app.id} className="p-4 bg-[#1a1a1a]/50 border border-neutral-800 hover:border-neutral-600 rounded transition-colors">
                       <div className="flex justify-between items-start">
                         <div className="flex-1 min-w-0">
-                          <Link to={`/profile/${app.freelancerWallet}`} className="font-display text-sm font-medium text-white font-mono hover:text-[#e63b2e] transition-colors">
-                            {shortenAddress(app.freelancerWallet)}
+                          <Link to={`/profile/${app.freelancerWallet}`} className="font-display text-sm font-medium text-white hover:text-[#e63b2e] transition-colors">
+                            {nameMap[app.freelancerWallet] || shortenAddress(app.freelancerWallet)}
                           </Link>
                           <p className="text-neutral-400 text-sm mt-1">{app.coverLetter}</p>
                         </div>
@@ -426,8 +433,8 @@ export default function JobDetail() {
                 </div>
                 <div className="flex justify-between items-center py-3">
                   <span className="text-xs text-neutral-500 uppercase font-medium">Client</span>
-                  <Link to={`/profile/${job.clientWallet}`} className="text-xs text-white font-mono hover:text-[#e63b2e] transition-colors">
-                    {shortenAddress(job.clientWallet)}
+                  <Link to={`/profile/${job.clientWallet}`} className="text-xs text-white hover:text-[#e63b2e] transition-colors">
+                    {nameMap[job.clientWallet] || shortenAddress(job.clientWallet)}
                   </Link>
                 </div>
               </div>

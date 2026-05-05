@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { db } from '@/lib/db'
-import { shortenAddress, lamportsToSol, SOLANA_NETWORK } from '@/lib/solana'
+import { shortenAddress, lamportsToSol, explorerUrl } from '@/lib/solana'
 import { Button } from '@/components/ui/button'
 import { useProfile } from '@/contexts/ProfileContext'
 import { useOnChainProfile } from '@/hooks/useOnChainProfile'
 import { useOnChainReviews } from '@/hooks/useOnChainReviews'
+import { useOnChainProfiles } from '@/hooks/useOnChainProfiles'
 import OnboardingModal from '@/components/OnboardingModal'
 
 export default function Profile() {
@@ -20,6 +21,8 @@ export default function Profile() {
 
   const profile = isOwn ? ownProfile : otherProfile
   const loading = isOwn ? profileLoading : otherLoading
+  const reviewerWallets = [...new Set((onChainReviews || []).map((r) => r.clientWallet).filter(Boolean))]
+  const { profiles: reviewerProfiles } = useOnChainProfiles(reviewerWallets)
 
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ displayName: '', bio: '', skills: '', role: 'both' })
@@ -138,6 +141,17 @@ export default function Profile() {
                   <span className="font-display text-[10px] bg-[#e63b2e]/10 text-[#e63b2e] px-3 py-1 rounded-full uppercase border border-[#e63b2e]/30">
                     On-Chain Identity
                   </span>
+                )}
+                {mintAddress && (
+                  <a
+                    href={explorerUrl(mintAddress)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-display text-[10px] bg-[#537aff]/10 text-[#537aff] px-3 py-1 rounded-full uppercase border border-[#537aff]/30 hover:bg-[#537aff]/20 transition-colors flex items-center gap-1"
+                  >
+                    Profile SBT
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
                 )}
                 <span className="flex items-center gap-1 text-[#e63b2e] font-display text-[10px] uppercase">
                   <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
@@ -313,7 +327,7 @@ export default function Profile() {
                           </div>
                           {r.onChain ? (
                             <a
-                              href={`https://explorer.solana.com/address/${r.mintAddress}?cluster=${SOLANA_NETWORK}`}
+                              href={explorerUrl(r.mintAddress)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="font-display text-[9px] bg-[#e63b2e]/10 text-[#e63b2e] px-2 py-0.5 rounded uppercase border border-[#e63b2e]/30 hover:bg-[#e63b2e]/20 transition-colors"
@@ -329,7 +343,9 @@ export default function Profile() {
                         )}
                       </div>
                       <div className="mt-4 pt-4 border-t border-zinc-800">
-                        <span className="font-display text-[10px] text-zinc-500 uppercase tracking-widest">— {shortenAddress(r.clientWallet)}</span>
+                        <span className="font-display text-[10px] text-zinc-500 uppercase tracking-widest">
+                          — {reviewerProfiles[r.clientWallet]?.displayName || shortenAddress(r.clientWallet)}
+                        </span>
                       </div>
                     </div>
                   ))}
