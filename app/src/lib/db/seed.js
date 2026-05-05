@@ -1,3 +1,6 @@
+import { fireDb } from './firebase'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
+
 const WALLETS = {
   client1: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
   client2: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
@@ -319,23 +322,38 @@ const disputes = {
   },
 }
 
-export function seedDemoData() {
-  if (localStorage.getItem('_demo_seeded')) return false
+export async function seedDemoData() {
+  // Seed profiles, reviews, disputes to localStorage (unchanged)
+  if (!localStorage.getItem('_demo_seeded')) {
+    localStorage.setItem('profiles', JSON.stringify(profiles))
+    localStorage.setItem('reviews', JSON.stringify(reviews))
+    localStorage.setItem('disputes', JSON.stringify(disputes))
+    localStorage.setItem('_demo_seeded', '1')
+  }
 
-  localStorage.setItem('profiles', JSON.stringify(profiles))
-  localStorage.setItem('jobs', JSON.stringify(jobs))
-  localStorage.setItem('applications', JSON.stringify(applications))
-  localStorage.setItem('reviews', JSON.stringify(reviews))
-  localStorage.setItem('disputes', JSON.stringify(disputes))
-  localStorage.setItem('_demo_seeded', '1')
+  // Seed jobs and applications to Firestore (shared across all users)
+  const metaRef = doc(fireDb, '_meta', 'seed')
+  const metaSnap = await getDoc(metaRef)
+  if (metaSnap.exists()) return false
+
+  const promises = []
+
+  for (const [key, data] of Object.entries(jobs)) {
+    promises.push(setDoc(doc(fireDb, 'jobs', key), data))
+  }
+
+  for (const [key, data] of Object.entries(applications)) {
+    promises.push(setDoc(doc(fireDb, 'applications', key), data))
+  }
+
+  await Promise.all(promises)
+  await setDoc(metaRef, { seededAt: Date.now() })
 
   return true
 }
 
 export function clearDemoData() {
   localStorage.removeItem('profiles')
-  localStorage.removeItem('jobs')
-  localStorage.removeItem('applications')
   localStorage.removeItem('reviews')
   localStorage.removeItem('disputes')
   localStorage.removeItem('_demo_seeded')
