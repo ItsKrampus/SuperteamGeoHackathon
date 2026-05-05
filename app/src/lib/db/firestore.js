@@ -6,6 +6,9 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  query,
+  where,
+  onSnapshot,
 } from 'firebase/firestore'
 
 function generateId() {
@@ -93,6 +96,34 @@ export const firestoreDb = {
       const updates = { status, updatedAt: Date.now() }
       await updateDoc(docRef, updates)
       return { ...snap.data(), ...updates }
+    },
+  },
+
+  messages: {
+    async send(data) {
+      const id = generateId()
+      const record = stripUndefined({
+        ...data,
+        id,
+        createdAt: Date.now(),
+      })
+      await setDoc(doc(fireDb, 'messages', id), record)
+      return record
+    },
+
+    subscribe(jobKey, callback) {
+      const q = query(
+        collection(fireDb, 'messages'),
+        where('jobKey', '==', jobKey)
+      )
+      return onSnapshot(q, (snap) => {
+        const msgs = snap.docs
+          .map((d) => d.data())
+          .sort((a, b) => a.createdAt - b.createdAt)
+        callback(msgs)
+      }, (err) => {
+        console.error('Messages subscription error:', err)
+      })
     },
   },
 }

@@ -5,6 +5,7 @@ export const db = {
   profiles: localDb.profiles,
   jobs: firestoreDb.jobs,
   applications: firestoreDb.applications,
+  messages: firestoreDb.messages,
   reviews: localDb.reviews,
   disputes: localDb.disputes,
 }

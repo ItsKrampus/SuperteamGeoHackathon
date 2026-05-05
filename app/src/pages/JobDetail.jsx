@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
@@ -15,6 +15,7 @@ import { mintReviewNft } from '@/lib/nft/mintReviewNft'
 import { Button } from '@/components/ui/button'
 import ReviewModal from '@/components/ReviewModal'
 import { useProfile } from '@/contexts/ProfileContext'
+import { useOnChainProfile } from '@/hooks/useOnChainProfile'
 
 const STATUS_LABELS = {
   funded: 'Open — Accepting Applications',
@@ -40,12 +41,22 @@ export default function JobDetail() {
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
   const [txResult, setTxResult] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [msgText, setMsgText] = useState('')
+  const chatEndRef = useRef(null)
   const { profile } = useProfile()
 
   const isClient = connected && publicKey?.toBase58() === clientWallet
   const canApply = connected && !isClient && profile?.role !== 'client'
   const isFreelancer =
     connected && job?.freelancerWallet && publicKey?.toBase58() === job.freelancerWallet
+
+  const otherWallet = isClient ? job?.freelancerWallet : isFreelancer ? clientWallet : null
+  const { profile: otherProfile } = useOnChainProfile(otherWallet)
+
+  const nameMap = {}
+  if (profile?.displayName && publicKey) nameMap[publicKey.toBase58()] = profile.displayName
+  if (otherProfile?.displayName && otherWallet) nameMap[otherWallet] = otherProfile.displayName
 
   const refresh = useCallback(async () => {
     const jobData = await db.jobs.get(clientWallet, jobId)
@@ -59,6 +70,27 @@ export default function JobDetail() {
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!job?.freelancerWallet || (!isClient && !isFreelancer)) return
+    const jobKey = `${clientWallet}_${jobId}`
+    const unsubscribe = db.messages.subscribe(jobKey, (msgs) => {
+      setMessages(msgs)
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    })
+    return unsubscribe
+  }, [job?.freelancerWallet, isClient, isFreelancer, clientWallet, jobId])
+
+  async function handleSendMessage(e) {
+    e.preventDefault()
+    if (!msgText.trim()) return
+    await db.messages.send({
+      jobKey: `${clientWallet}_${jobId}`,
+      senderWallet: publicKey.toBase58(),
+      text: msgText.trim(),
+    })
+    setMsgText('')
+  }
 
   async function handleApply(e) {
     e.preventDefault()
@@ -326,6 +358,49 @@ export default function JobDetail() {
                     </form>
                   )}
                 </div>
+              </section>
+            )}
+
+            {job.freelancerWallet && (isClient || isFreelancer) && (
+              <section className="bg-[#1a1a1a] border border-neutral-800 rounded-lg overflow-hidden">
+                <div className="p-6 border-b border-neutral-800">
+                  <h2 className="font-display text-xl font-semibold text-white flex items-center gap-2">
+                    <span className="material-symbols-outlined text-neutral-400">chat</span>
+                    Messages
+                  </h2>
+                </div>
+                <div className="h-80 overflow-y-auto p-6 space-y-4">
+                  {messages.length === 0 && (
+                    <p className="text-neutral-500 text-sm text-center py-8">No messages yet. Start the conversation.</p>
+                  )}
+                  {messages.map((msg) => {
+                    const isMine = msg.senderWallet === publicKey?.toBase58()
+                    const senderName = nameMap[msg.senderWallet] || shortenAddress(msg.senderWallet)
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                        <span className="text-[10px] text-neutral-500 font-display uppercase tracking-widest mb-1">
+                          {senderName}
+                        </span>
+                        <div className={`max-w-[80%] px-4 py-2.5 rounded-lg text-sm ${isMine ? 'bg-[#e63b2e] text-white' : 'bg-neutral-800 text-neutral-200'}`}>
+                          {msg.text}
+                        </div>
+                        <span className="text-[9px] text-neutral-600 mt-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    )
+                  })}
+                  <div ref={chatEndRef} />
+                </div>
+                <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-800 flex gap-3">
+                  <input
+                    className="flex-1 bg-neutral-800 border-none text-white px-4 py-2.5 rounded-lg text-sm focus:ring-1 focus:ring-[#e63b2e] outline-none"
+                    value={msgText}
+                    onChange={(e) => setMsgText(e.target.value)}
+                    placeholder="Type a message..."
+                  />
+                  <Button type="submit" variant="brand" disabled={!msgText.trim()}>Send</Button>
+                </form>
               </section>
             )}
           </div>
