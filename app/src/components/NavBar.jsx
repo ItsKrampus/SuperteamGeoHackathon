@@ -6,9 +6,7 @@ import { cn } from '@/lib/utils'
 import { useProfile } from '@/contexts/ProfileContext'
 
 const links = [
-  { to: '/', label: 'Home' },
-  { to: '/jobs', label: 'Browse Jobs' },
-  { to: '/jobs/new', label: 'Post Job', roles: ['client', 'both'] },
+  { to: '/jobs', label: 'Jobs' },
   { to: '/dashboard', label: 'Dashboard', auth: true },
 ]
 
@@ -28,7 +26,6 @@ export default function NavBar() {
         <div className="hidden md:flex gap-6">
           {links
             .filter((link) => !link.auth || publicKey)
-            .filter((link) => !link.roles || !profile?.role || link.roles.includes(profile.role))
             .map((link) => (
             <Link
               key={link.to}

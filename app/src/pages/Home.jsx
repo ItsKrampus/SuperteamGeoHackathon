@@ -20,16 +20,15 @@ export default function Home() {
         <div className="relative z-10 max-w-5xl text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-800 border border-neutral-700 rounded-full">
             <span className="flex h-2 w-2 rounded-full bg-[#e63b2e]"></span>
-            <span className="font-display text-xs text-neutral-400 uppercase tracking-widest">Devnet Live</span>
+            <span className="font-display text-xs text-neutral-400 uppercase tracking-widest">Built on Solana</span>
           </div>
 
-          <h1 className="font-display text-[64px] leading-[1.1] font-black text-white tracking-tighter uppercase md:px-12">
-            The Future of Freelancing is <span className="text-[#e63b2e]">Decentralized</span>
+          <h1 className="font-display text-[56px] md:text-[64px] leading-[1.1] font-black text-white tracking-tighter uppercase md:px-12">
+            Connect Wallet. <span className="text-[#e63b2e]">Start Working.</span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg text-neutral-400">
-            Eliminate middlemen fees and secure your work with programmable smart contracts.
-            Payments held in on-chain escrow. Reviews minted as soulbound NFTs.
+            No signup. No email verification. No middleman fees. Your Solana wallet is your identity — profiles live on-chain as soulbound NFTs, payments are secured by smart contract escrow, and every review is permanently minted to the blockchain.
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 pt-6">
@@ -50,64 +49,61 @@ export default function Home() {
             ) : (
               <div className="flex flex-col items-center gap-4">
                 <WalletMultiButton />
-                <p className="text-sm text-neutral-500">Connect Phantom to get started</p>
+                <p className="text-sm text-neutral-500">That's it. No forms, no passwords.</p>
               </div>
             )}
-          </div>
-
-          <div className="pt-16 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-60">
-            <div className="flex flex-col items-center">
-              <span className="font-display text-2xl font-semibold text-white">$0</span>
-              <span className="font-display text-xs text-neutral-400 uppercase">Platform Fee</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="font-display text-2xl font-semibold text-white">SOL</span>
-              <span className="font-display text-xs text-neutral-400 uppercase">Escrow Payments</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="font-display text-2xl font-semibold text-white">Instant</span>
-              <span className="font-display text-xs text-neutral-400 uppercase">Settlement</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="font-display text-2xl font-semibold text-white">SBT</span>
-              <span className="font-display text-xs text-neutral-400 uppercase">Soulbound Reviews</span>
-            </div>
           </div>
         </div>
       </section>
 
       <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-8 bg-neutral-900 border border-neutral-800 p-8 rounded-xl flex flex-col justify-between group">
-            <div>
-              <div className="mb-4 text-[#e63b2e]">
-                <span className="material-symbols-outlined text-4xl">verified_user</span>
-              </div>
-              <h3 className="font-display text-3xl font-semibold mb-4">Programmable Escrow</h3>
-              <p className="text-neutral-400 max-w-md">Smart contracts hold funds in secure PDAs. Payment is triggered automatically upon work approval — no disputes, no delays.</p>
+        <div className="text-center mb-16">
+          <span className="font-display text-xs text-[#e63b2e] uppercase tracking-[0.2em]">Why On-Chain</span>
+          <h2 className="font-display mt-4 text-4xl font-bold uppercase">Everything Verifiable. Nothing Hidden.</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-neutral-900 border border-neutral-800 p-8 rounded-xl">
+            <div className="w-14 h-14 bg-[#e63b2e]/10 border border-[#e63b2e]/30 rounded-lg flex items-center justify-center mb-6">
+              <span className="material-symbols-outlined text-[#e63b2e] text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>fingerprint</span>
             </div>
-            <div className="mt-12 h-64 overflow-hidden relative rounded-lg border border-neutral-800 bg-neutral-950 flex items-center justify-center">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#e63b2e]/5 via-transparent to-blue-600/5"></div>
-              <div className="text-center relative z-10">
-                <span className="material-symbols-outlined text-6xl text-neutral-700">lock</span>
-                <p className="text-neutral-600 font-display text-xs uppercase tracking-widest mt-2">On-Chain Escrow Protocol</p>
-              </div>
+            <h3 className="font-display text-xl font-semibold mb-3">Soulbound Identity</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-4">
+              Your profile is a non-transferable NFT minted via Token-2022. Connect any wallet that holds your Profile SBT and your identity loads instantly — no database, no account recovery.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">Token-2022</span>
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">NonTransferable</span>
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">MetadataPointer</span>
             </div>
           </div>
-          <div className="md:col-span-4 bg-neutral-900 border border-neutral-800 p-8 rounded-xl flex flex-col justify-center text-center">
-            <div className="mx-auto mb-6 text-blue-500">
-              <span className="material-symbols-outlined text-6xl">star</span>
+
+          <div className="bg-neutral-900 border border-neutral-800 p-8 rounded-xl">
+            <div className="w-14 h-14 bg-[#537aff]/10 border border-[#537aff]/30 rounded-lg flex items-center justify-center mb-6">
+              <span className="material-symbols-outlined text-[#537aff] text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
             </div>
-            <h3 className="font-display text-2xl font-semibold mb-4">On-Chain Reputation</h3>
-            <p className="text-neutral-400">Build a portable work history that you truly own. Every review is minted as a Soulbound Token (SBT).</p>
-            <div className="mt-8 pt-8 border-t border-neutral-800">
-              <div className="flex -space-x-2 justify-center">
-                <div className="w-10 h-10 rounded-full border-2 border-neutral-900 bg-neutral-800"></div>
-                <div className="w-10 h-10 rounded-full border-2 border-neutral-900 bg-neutral-800"></div>
-                <div className="w-10 h-10 rounded-full border-2 border-neutral-900 bg-neutral-800"></div>
-                <div className="w-10 h-10 rounded-full border-2 border-neutral-900 bg-neutral-800 flex items-center justify-center text-[10px] text-neutral-400">+</div>
-              </div>
-              <p className="mt-4 font-display text-xs text-neutral-500 uppercase tracking-widest">Portable Reputation</p>
+            <h3 className="font-display text-xl font-semibold mb-3">Programmable Escrow</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-4">
+              Funds are locked in a PDA controlled by an Anchor smart contract. Payment releases only when the client approves — no trust required, no third party involved. 0% platform fee.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">Anchor</span>
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">PDA Escrow</span>
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">0% Fee</span>
+            </div>
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800 p-8 rounded-xl">
+            <div className="w-14 h-14 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center justify-center mb-6">
+              <span className="material-symbols-outlined text-green-400 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            </div>
+            <h3 className="font-display text-xl font-semibold mb-3">Immutable Reviews</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-4">
+              After job completion, the client mints a soulbound review NFT directly to the freelancer's wallet. Ratings can't be edited, deleted, or faked — they're permanent proof of work.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">Soulbound</span>
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">Immutable</span>
+              <span className="text-[10px] font-display bg-neutral-800 text-neutral-400 px-2 py-1 rounded uppercase border border-neutral-700">Portable</span>
             </div>
           </div>
         </div>
@@ -116,22 +112,23 @@ export default function Home() {
       <section className="py-24 bg-neutral-950 border-y border-neutral-800">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <span className="font-display text-xs text-[#e63b2e] uppercase tracking-[0.2em]">Efficiency Protocol</span>
-            <h2 className="font-display mt-4 text-4xl font-bold uppercase">Streamlined Workflow</h2>
+            <span className="font-display text-xs text-[#e63b2e] uppercase tracking-[0.2em]">How It Works</span>
+            <h2 className="font-display mt-4 text-4xl font-bold uppercase">From Posting to Payment in 4 Steps</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-            <div className="hidden md:block absolute top-12 left-1/4 right-1/4 h-px bg-neutral-800"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-px bg-neutral-800"></div>
             {[
-              { num: '01', title: 'Post & Stake', desc: 'Clients post a job and stake the budget in the escrow contract. Total visibility, total trust.', border: 'border-[#e63b2e]' },
-              { num: '02', title: 'Work & Submit', desc: 'Freelancers do the work and submit deliverables. Milestones tracked on-chain.', border: 'border-neutral-700 group-hover:border-blue-500' },
-              { num: '03', title: 'Instant Settlement', desc: 'Once approved, escrow releases funds instantly to the freelancer\'s wallet. Zero delays.', border: 'border-neutral-700 group-hover:border-green-500' },
+              { num: '01', title: 'Connect Wallet', desc: 'Your soulbound Profile NFT loads automatically. No signup form — your wallet is your account.', color: 'border-[#e63b2e]' },
+              { num: '02', title: 'Post or Apply', desc: 'Clients deploy jobs with SOL locked in escrow. Freelancers browse and apply with a cover letter.', color: 'border-[#537aff]' },
+              { num: '03', title: 'Work & Submit', desc: 'Freelancer delivers the work. Smart contract tracks status on-chain throughout the lifecycle.', color: 'border-yellow-500' },
+              { num: '04', title: 'Get Paid + Review', desc: 'Client approves, escrow releases instantly. A soulbound review NFT is minted as proof of completion.', color: 'border-green-500' },
             ].map((step) => (
               <div key={step.num} className="relative group">
-                <div className={`w-16 h-16 bg-neutral-900 border-2 ${step.border} flex items-center justify-center mb-8 relative z-10 transition-colors`}>
-                  <span className="font-display text-xl font-semibold text-white">{step.num}</span>
+                <div className={`w-14 h-14 bg-neutral-900 border-2 ${step.color} flex items-center justify-center mb-6 relative z-10`}>
+                  <span className="font-display text-lg font-semibold text-white">{step.num}</span>
                 </div>
-                <h4 className="font-display text-xl font-semibold mb-4">{step.title}</h4>
-                <p className="text-neutral-400">{step.desc}</p>
+                <h4 className="font-display text-lg font-semibold mb-3">{step.title}</h4>
+                <p className="text-neutral-400 text-sm">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -144,18 +141,18 @@ export default function Home() {
             <span className="material-symbols-outlined text-[300px] absolute -right-20 -bottom-20" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
           </div>
           <div className="relative z-10">
-            <h2 className="font-display text-4xl font-bold mb-6 uppercase text-white">Ready to join the revolution?</h2>
-            <p className="text-white/80 mb-10 text-lg max-w-xl mx-auto">Skip the paperwork and the platform fees. Start building on the protocol today.</p>
+            <h2 className="font-display text-4xl font-bold mb-4 uppercase text-white">Your wallet is your resume.</h2>
+            <p className="text-white/80 mb-10 text-lg max-w-xl mx-auto">Every job you complete, every review you earn — it's all on-chain, portable, and yours forever.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               {connected ? (
                 <>
                   {canPost && (
                     <Link to="/jobs/new" className="bg-white text-[#e63b2e] px-8 py-4 font-display font-bold uppercase tracking-tighter hover:bg-neutral-100 transition-all active:scale-95">
-                      Post Your First Job
+                      Post a Job
                     </Link>
                   )}
                   <Link to="/jobs" className="border border-white text-white px-8 py-4 font-display font-bold uppercase tracking-tighter hover:bg-white/10 transition-all active:scale-95">
-                    Browse Active Jobs
+                    Browse Jobs
                   </Link>
                 </>
               ) : (
@@ -169,14 +166,7 @@ export default function Home() {
       <footer className="w-full py-8 px-6 flex flex-col md:flex-row justify-between items-center bg-card border-t border-neutral-800">
         <div className="flex flex-col items-center md:items-start gap-2 mb-6 md:mb-0">
           <span className="font-display font-black text-white uppercase tracking-tight">PROOFWORK</span>
-          <p className="font-display text-xs tracking-widest uppercase text-neutral-500">© 2024 PROOFWORK. PROTOCOL-DRIVEN WORK.</p>
-        </div>
-        <div className="flex items-center gap-8">
-          {['Terms', 'Privacy', 'Security', 'Docs'].map((link) => (
-            <span key={link} className="font-display text-xs tracking-widest uppercase text-neutral-500 hover:text-[#e63b2e] transition-colors cursor-pointer">
-              {link}
-            </span>
-          ))}
+          <p className="font-display text-xs tracking-widest uppercase text-neutral-500">Built on Solana. Powered by Smart Contracts.</p>
         </div>
       </footer>
     </main>

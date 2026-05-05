@@ -3,8 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { db } from '@/lib/db'
-import { lamportsToSol, shortenAddress, ADMIN_PUBKEY } from '@/lib/solana'
-import { fetchJobAccount } from '@/lib/anchor/instructions'
+import { lamportsToSol, shortenAddress, explorerUrl } from '@/lib/solana'
 import {
   acceptFreelancer,
   submitWork,
@@ -34,13 +33,13 @@ export default function JobDetail() {
   const { connection } = useConnection()
 
   const [job, setJob] = useState(null)
-  const [onChain, setOnChain] = useState(null)
   const [applications, setApplications] = useState([])
   const [coverLetter, setCoverLetter] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
+  const [txResult, setTxResult] = useState(null)
   const { profile } = useProfile()
 
   const isClient = connected && publicKey?.toBase58() === clientWallet
@@ -54,18 +53,6 @@ export default function JobDetail() {
     const apps = await db.applications.listForJob(clientWallet, jobId)
     setApplications(apps)
 
-    if (jobData?.jobAccountPda && connected) {
-      try {
-        const acc = await fetchJobAccount(
-          wallet,
-          connection,
-          new PublicKey(jobData.jobAccountPda)
-        )
-        setOnChain(acc)
-      } catch {
-        setOnChain(null)
-      }
-    }
     setLoading(false)
   }, [clientWallet, jobId, connected, wallet, connection])
 
@@ -87,9 +74,10 @@ export default function JobDetail() {
 
   async function handleAccept(app) {
     setActionLoading(true)
+    setTxResult(null)
     try {
       const jobPda = new PublicKey(job.jobAccountPda)
-      await acceptFreelancer(wallet, connection, {
+      const { tx } = await acceptFreelancer(wallet, connection, {
         jobPda,
         freelancerPubkey: new PublicKey(app.freelancerWallet),
       })
@@ -98,10 +86,11 @@ export default function JobDetail() {
         freelancerWallet: app.freelancerWallet,
       })
       await db.applications.updateStatus(app.id, 'accepted')
+      setTxResult({ type: 'success', message: 'Freelancer accepted', txSig: tx })
       refresh()
     } catch (err) {
       console.error('Accept freelancer failed:', err)
-      alert(`Failed: ${err.message}`)
+      setTxResult({ type: 'error', message: err.message })
     } finally {
       setActionLoading(false)
     }
@@ -109,30 +98,36 @@ export default function JobDetail() {
 
   async function handleAction(action) {
     setActionLoading(true)
+    setTxResult(null)
     try {
       const jobPda = new PublicKey(job.jobAccountPda)
+      let result
 
       if (action === 'submit') {
-        await submitWork(wallet, connection, { jobPda })
+        result = await submitWork(wallet, connection, { jobPda })
         await db.jobs.update(clientWallet, jobId, { status: 'submitted' })
+        setTxResult({ type: 'success', message: 'Work submitted', txSig: result.tx })
       } else if (action === 'release') {
-        await releasePayment(wallet, connection, {
+        result = await releasePayment(wallet, connection, {
           jobPda,
           freelancerPubkey: new PublicKey(job.freelancerWallet),
         })
         await db.jobs.update(clientWallet, jobId, { status: 'released' })
+        setTxResult({ type: 'success', message: 'Payment released', txSig: result.tx })
         setShowReviewModal(true)
       } else if (action === 'dispute') {
-        await disputeJob(wallet, connection, { jobPda })
+        result = await disputeJob(wallet, connection, { jobPda })
         await db.jobs.update(clientWallet, jobId, { status: 'disputed' })
+        setTxResult({ type: 'success', message: 'Dispute filed', txSig: result.tx })
       } else if (action === 'cancel') {
-        await cancelJob(wallet, connection, { jobPda })
+        result = await cancelJob(wallet, connection, { jobPda })
         await db.jobs.update(clientWallet, jobId, { status: 'cancelled' })
+        setTxResult({ type: 'success', message: 'Job cancelled, funds refunded', txSig: result.tx })
       }
       refresh()
     } catch (err) {
       console.error(`Action ${action} failed:`, err)
-      alert(`Failed: ${err.message}`)
+      setTxResult({ type: 'error', message: err.message })
     } finally {
       setActionLoading(false)
     }
@@ -160,10 +155,11 @@ export default function JobDetail() {
       })
 
       setShowReviewModal(false)
+      setTxResult({ type: 'success', message: 'Soulbound review NFT minted', txSig, mintAddress })
       refresh()
     } catch (err) {
       console.error('NFT mint failed:', err)
-      alert(`Review mint failed: ${err.message}. Review saved without NFT.`)
+      setTxResult({ type: 'error', message: `Review mint failed: ${err.message}` })
       setShowReviewModal(false)
     } finally {
       setReviewLoading(false)
@@ -373,18 +369,76 @@ export default function JobDetail() {
 
             {actionLoading && (
               <div className="p-4 border border-[#537aff]/20 bg-[#537aff]/5 rounded-lg">
-                <p className="text-[10px] text-[#537aff] font-bold uppercase tracking-widest mb-1">Processing</p>
-                <p className="text-xs text-neutral-400">Confirm in Phantom...</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-[#537aff] border-t-transparent rounded-full animate-spin" />
+                  <div>
+                    <p className="text-[10px] text-[#537aff] font-bold uppercase tracking-widest">Processing</p>
+                    <p className="text-xs text-neutral-400">Confirm in Phantom...</p>
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className="p-4 border border-[#537aff]/20 bg-[#537aff]/5 rounded-lg">
-              <p className="text-[10px] text-[#537aff] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">info</span>
-                Security Note
-              </p>
-              <p className="text-xs text-neutral-400 leading-relaxed">All transactions require wallet confirmation. Funds are secured by the Solana blockchain.</p>
-            </div>
+            {txResult && (
+              <div className={`p-4 rounded-lg border ${txResult.type === 'success' ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${txResult.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {txResult.type === 'success' ? 'Transaction Confirmed' : 'Transaction Failed'}
+                </p>
+                <p className="text-xs text-neutral-300 mb-2">{txResult.message}</p>
+                {txResult.txSig && (
+                  <a
+                    href={explorerUrl(txResult.txSig, 'tx')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[10px] text-[#537aff] hover:text-[#e63b2e] font-display uppercase tracking-widest transition-colors"
+                  >
+                    View on Solana Explorer
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                )}
+                {txResult.mintAddress && (
+                  <a
+                    href={explorerUrl(txResult.mintAddress)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[10px] text-[#537aff] hover:text-[#e63b2e] font-display uppercase tracking-widest transition-colors ml-4"
+                  >
+                    View NFT
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                )}
+              </div>
+            )}
+
+            {job.jobAccountPda && (
+              <div className="p-4 border border-neutral-800 bg-neutral-900/50 rounded-lg">
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-2">Escrow Account (PDA)</p>
+                <a
+                  href={explorerUrl(job.jobAccountPda)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-white font-mono hover:text-[#e63b2e] transition-colors flex items-center gap-1"
+                >
+                  {shortenAddress(job.jobAccountPda, 8)}
+                  <span className="material-symbols-outlined text-xs text-neutral-500">open_in_new</span>
+                </a>
+              </div>
+            )}
+
+            {job.txSig && (
+              <div className="p-4 border border-neutral-800 bg-neutral-900/50 rounded-lg">
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-2">Creation Transaction</p>
+                <a
+                  href={explorerUrl(job.txSig, 'tx')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-white font-mono hover:text-[#e63b2e] transition-colors flex items-center gap-1"
+                >
+                  {shortenAddress(job.txSig, 8)}
+                  <span className="material-symbols-outlined text-xs text-neutral-500">open_in_new</span>
+                </a>
+              </div>
+            )}
           </aside>
         </div>
       </div>

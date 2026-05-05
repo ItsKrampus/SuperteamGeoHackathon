@@ -9,10 +9,6 @@ export const SOLANA_NETWORK = import.meta.env.VITE_SOLANA_NETWORK || 'devnet'
 export const RPC_URL =
   import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.devnet.solana.com'
 
-export const USDC_DEV_MINT = new PublicKey(
-  '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'
-)
-
 export function shortenAddress(address, chars = 4) {
   const str = typeof address === 'string' ? address : address.toBase58()
   return `${str.slice(0, chars)}...${str.slice(-chars)}`
@@ -24,4 +20,9 @@ export function lamportsToSol(lamports) {
 
 export function solToLamports(sol) {
   return Math.round(sol * 1e9)
+}
+
+export function explorerUrl(value, type = 'address') {
+  const cluster = SOLANA_NETWORK === 'mainnet-beta' ? '' : `?cluster=${SOLANA_NETWORK}`
+  return `https://explorer.solana.com/${type}/${value}${cluster}`
 }

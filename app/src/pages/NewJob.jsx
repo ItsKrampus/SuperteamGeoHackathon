@@ -115,34 +115,24 @@ export default function NewJob() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Budget Amount</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-zinc-400 font-bold font-display text-sm">◎</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        className="w-full bg-zinc-800 border-zinc-700 text-white pl-10 pr-4 p-3 rounded-lg focus:ring-2 focus:ring-[#e63b2e] focus:border-transparent outline-none transition-all duration-200"
-                        value={amountSol}
-                        onChange={(e) => setAmountSol(e.target.value)}
-                        placeholder="0.00"
-                        required
-                      />
+                <div className="space-y-2">
+                  <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Budget Amount (SOL)</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-zinc-400 font-bold font-display text-sm">◎</span>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Currency</label>
-                    <div className="flex gap-2">
-                      <button type="button" className="flex-1 bg-zinc-800 border-2 border-[#e63b2e] text-white p-3 rounded-lg font-bold flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-sm">payments</span> SOL
-                      </button>
-                      <button type="button" className="flex-1 bg-zinc-800 border border-zinc-700 text-zinc-400 p-3 rounded-lg font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-50">
-                        <span className="material-symbols-outlined text-sm">account_balance</span> USDC
-                      </button>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      className="w-full bg-zinc-800 border-zinc-700 text-white pl-10 pr-16 p-3 rounded-lg focus:ring-2 focus:ring-[#e63b2e] focus:border-transparent outline-none transition-all duration-200"
+                      value={amountSol}
+                      onChange={(e) => setAmountSol(e.target.value)}
+                      placeholder="0.00"
+                      required
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-zinc-500 font-bold font-display text-xs">SOL</span>
                     </div>
                   </div>
                 </div>
