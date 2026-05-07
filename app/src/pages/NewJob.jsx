@@ -159,13 +159,13 @@ export default function NewJob() {
                 )}
 
                 <div className="flex items-center justify-between pt-4">
-                  <button type="button" onClick={() => navigate(-1)} className="text-zinc-500 font-bold hover:text-white transition-colors font-display text-sm">
+                  <button type="button" onClick={() => navigate(-1)} className="text-zinc-500 font-bold hover:text-white transition-colors font-display text-sm focus-visible:ring-2 focus-visible:ring-[#e63b2e] rounded px-2 py-1">
                     Discard Draft
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#e63b2e] text-white px-12 py-4 rounded font-bold font-display text-base hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#e63b2e]/20 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider flex items-center gap-2"
+                    className="bg-[#e63b2e] text-white px-12 py-4 rounded font-bold font-display text-base hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[#e63b2e]/20 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-[#e63b2e] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
                   >
                     <span className="material-symbols-outlined">lock</span>
                     {loading ? 'Confirm in Phantom...' : 'Deploy Job to Chain'}

@@ -53,13 +53,14 @@ export default function Jobs() {
               className="w-full bg-[#2a2a2a] border-none focus:ring-1 focus:ring-[#e63b2e] text-white pl-10 pr-4 py-3 rounded-[4px] text-sm"
               placeholder="Search jobs, skills, or keywords..."
               type="text"
+              aria-label="Search jobs"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-4">
             <select
-              className="bg-[#2a2a2a] border-none text-white font-display text-xs px-4 py-2 rounded-[4px] focus:ring-[#e63b2e]"
+              className="bg-[#2a2a2a] border-none text-white font-display text-xs px-4 py-2 rounded-[4px] focus:ring-1 focus:ring-[#e63b2e] outline-none"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
@@ -104,7 +105,7 @@ export default function Jobs() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-white font-display text-lg font-semibold">{lamportsToSol(job.amount)} SOL</div>
+                      <div className="text-white font-display text-lg font-semibold font-mono tabular-nums">{lamportsToSol(job.amount)} SOL</div>
                       <div className="text-neutral-500 font-display text-[10px] uppercase">Budget</div>
                     </div>
                   </div>

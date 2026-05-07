@@ -29,6 +29,7 @@ export default function Profile() {
   const [localReviews, setLocalReviews] = useState([])
   const [jobs, setJobs] = useState([])
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function Profile() {
   async function handleSave(e) {
     e.preventDefault()
     setSaving(true)
+    setSaveError(null)
     try {
       const data = {
         displayName: form.displayName,
@@ -90,6 +92,7 @@ export default function Profile() {
       setEditing(false)
     } catch (err) {
       console.error('Profile save failed:', err)
+      setSaveError(err.message || 'Failed to save profile')
     } finally {
       setSaving(false)
     }
@@ -167,7 +170,7 @@ export default function Profile() {
             {isOwn && !editing && profile && (
               <button
                 onClick={() => setEditing(true)}
-                className="font-display text-sm font-bold tracking-widest border-2 border-zinc-700 hover:border-[#e63b2e] hover:text-[#e63b2e] px-8 py-3 rounded-lg transition-all active:scale-95 uppercase"
+                className="font-display text-sm font-bold tracking-widest border-2 border-zinc-700 hover:border-[#e63b2e] hover:text-[#e63b2e] px-8 py-3 rounded-lg transition-all active:scale-95 uppercase focus-visible:ring-2 focus-visible:ring-[#e63b2e] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
               >
                 Edit Profile
               </button>
@@ -207,6 +210,9 @@ export default function Profile() {
                   <option value="both">Both</option>
                 </select>
               </div>
+              {saveError && (
+                <p className="text-sm text-red-400">{saveError}</p>
+              )}
               <div className="flex gap-3">
                 <Button type="submit" variant="brand" disabled={saving}>
                   {saving ? 'Saving...' : mintAddress ? 'Save On-Chain' : 'Save'}
@@ -282,7 +288,7 @@ export default function Profile() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="font-display text-sm text-white block">{lamportsToSol(j.amount)} SOL</span>
+                        <span className="font-display text-sm text-white block font-mono tabular-nums">{lamportsToSol(j.amount)} SOL</span>
                         <span className="text-[10px] font-display text-zinc-500 uppercase">
                           {j.status === 'released' ? 'Settled On-Chain' : j.status}
                         </span>

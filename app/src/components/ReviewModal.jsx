@@ -35,7 +35,9 @@ export default function ReviewModal({ open, onClose, onSubmit, loading }) {
                   key={star}
                   type="button"
                   onClick={() => setRating(star)}
-                  className="text-2xl transition-transform hover:scale-110"
+                  aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                  aria-pressed={star <= rating}
+                  className="text-2xl transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring rounded"
                 >
                   {star <= rating ? '★' : '☆'}
                 </button>

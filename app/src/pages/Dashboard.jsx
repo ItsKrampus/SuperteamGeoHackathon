@@ -78,11 +78,11 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-end gap-8">
               <div>
                 <p className="text-xs text-neutral-500 font-display uppercase mb-1">{isClientOnly ? 'Total Spent' : 'Total Earned'}</p>
-                <p className="text-4xl font-black text-white tracking-tighter">{lamportsToSol(isClientOnly ? totalSpent : totalEarned)} <span className="text-lg font-normal text-neutral-600">SOL</span></p>
+                <p className="text-4xl font-black text-white tracking-tighter font-mono tabular-nums">{lamportsToSol(isClientOnly ? totalSpent : totalEarned)} <span className="text-lg font-normal text-neutral-600">SOL</span></p>
               </div>
               <div className="md:border-l border-neutral-800 md:pl-8">
                 <p className="text-xs text-neutral-500 font-display uppercase mb-1">In Escrow</p>
-                <p className="text-4xl font-black text-white tracking-tighter">{lamportsToSol(totalEscrowed)} <span className="text-lg font-normal text-neutral-600">SOL</span></p>
+                <p className="text-4xl font-black text-white tracking-tighter font-mono tabular-nums">{lamportsToSol(totalEscrowed)} <span className="text-lg font-normal text-neutral-600">SOL</span></p>
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function Dashboard() {
                     }`}></div>
                     <div>
                       <p className="text-sm text-white font-medium">{job.title}</p>
-                      <p className="text-xs text-neutral-500">{job.status} &middot; {lamportsToSol(job.amount)} SOL</p>
+                      <p className="text-xs text-neutral-500">{job.status} &middot; <span className="font-mono tabular-nums">{lamportsToSol(job.amount)}</span> SOL</p>
                     </div>
                   </Link>
                 ))
@@ -156,7 +156,7 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
                         <div>
                           <p className="text-[10px] text-neutral-500 uppercase font-display">Budget</p>
-                          <p className="text-white font-bold">{lamportsToSol(job.amount)} SOL</p>
+                          <p className="text-white font-bold font-mono tabular-nums">{lamportsToSol(job.amount)} SOL</p>
                         </div>
                         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded ${
                           job.status === 'submitted' ? 'bg-yellow-500/10 text-yellow-400' :
@@ -189,7 +189,7 @@ export default function Dashboard() {
                   >
                     <div className="flex justify-between mb-2">
                       <h5 className="text-sm font-bold text-white">{job.title}</h5>
-                      <span className="text-xs text-green-400 font-bold">{lamportsToSol(job.amount)} SOL</span>
+                      <span className="text-xs text-green-400 font-bold font-mono tabular-nums">{lamportsToSol(job.amount)} SOL</span>
                     </div>
                     <div className="flex gap-2">
                       {job.tags?.slice(0, 2).map((tag) => (

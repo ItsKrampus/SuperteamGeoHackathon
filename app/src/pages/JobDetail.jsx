@@ -231,8 +231,7 @@ export default function JobDetail() {
                 {job.status === 'funded' ? 'Active Listing' : job.status}
               </span>
             </div>
-            <h1 className="font-display text-3xl font-bold text-white mb-2">{job.title}</h1>
-            <p className="text-neutral-400 max-w-2xl">{job.description}</p>
+            <h1 className="font-display text-3xl font-bold text-white">{job.title}</h1>
           </div>
           <div className="flex items-center gap-3">
             {isClient && job.status === 'funded' && !job.freelancerWallet && (
@@ -416,7 +415,7 @@ export default function JobDetail() {
             <div className="bg-[#1a1a1a] border border-neutral-800 p-8 rounded-lg">
               <p className="text-xs text-neutral-500 uppercase tracking-[0.2em] mb-2 font-bold">Total Budget</p>
               <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-4xl font-black text-white font-display tracking-tighter">{lamportsToSol(job.amount)}</span>
+                <span className="text-4xl font-black text-white font-display tracking-tighter font-mono tabular-nums">{lamportsToSol(job.amount)}</span>
                 <span className="text-xl text-neutral-400 font-bold tracking-tight">SOL</span>
               </div>
               <div className="space-y-4 mb-8">

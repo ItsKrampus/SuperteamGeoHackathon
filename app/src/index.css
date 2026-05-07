@@ -222,3 +222,10 @@
 .wallet-adapter-dropdown-list-item:hover {
   background-color: #2a2a2a !important;
 }
+
+.mobile-wallet .wallet-adapter-button {
+  width: 100% !important;
+  justify-content: center !important;
+  height: 48px !important;
+  font-size: 14px !important;
+}
