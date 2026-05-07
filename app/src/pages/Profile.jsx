@@ -196,12 +196,14 @@ export default function Profile() {
               </div>
               <div className="space-y-2">
                 <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Bio</label>
-                <textarea className={`${inputClass} min-h-[80px]`} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Tell clients about your expertise..." maxLength={200} />
+                <textarea className={`${inputClass} min-h-[80px]`} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder={form.role === 'client' ? 'Tell freelancers about your company or projects' : 'Tell clients about your expertise and experience'} maxLength={200} />
               </div>
-              <div className="space-y-2">
-                <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Skills (comma-separated)</label>
-                <input className={inputClass} value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Rust, Solidity, React, TypeScript" />
-              </div>
+              {form.role !== 'client' && (
+                <div className="space-y-2">
+                  <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Skills (comma-separated)</label>
+                  <input className={inputClass} value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Rust, Solidity, React, TypeScript" />
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Role</label>
                 <select className={inputClass} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>

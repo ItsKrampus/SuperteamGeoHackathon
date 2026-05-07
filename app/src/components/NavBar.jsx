@@ -9,6 +9,7 @@ import { useProfile } from '@/contexts/ProfileContext'
 const links = [
   { to: '/jobs', label: 'Jobs' },
   { to: '/dashboard', label: 'Dashboard', auth: true },
+  { to: '/lookup', label: 'Explorer' },
 ]
 
 export default function NavBar() {
