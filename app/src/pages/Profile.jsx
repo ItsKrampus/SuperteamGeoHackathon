@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, Navigate } from 'react-router-dom'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { db } from '@/lib/db'
 import { shortenAddress, lamportsToSol, explorerUrl } from '@/lib/solana'
 import { Button } from '@/components/ui/button'
 import { useProfile } from '@/contexts/ProfileContext'
-import { useOnChainProfile } from '@/hooks/useOnChainProfile'
 import { useOnChainReviews } from '@/hooks/useOnChainReviews'
 import { useOnChainProfiles } from '@/hooks/useOnChainProfiles'
 import OnboardingModal from '@/components/OnboardingModal'
@@ -15,12 +14,15 @@ export default function Profile() {
   const { publicKey, connected } = useWallet()
   const isOwn = connected && publicKey?.toBase58() === walletParam
 
+  if (!isOwn) {
+    return <Navigate to={`/lookup?wallet=${walletParam}`} replace />
+  }
+
   const { profile: ownProfile, needsOnboarding, updateProfile, mintAddress, loading: profileLoading } = useProfile()
-  const { profile: otherProfile, loading: otherLoading } = useOnChainProfile(isOwn ? null : walletParam)
   const { reviews: onChainReviews, loading: reviewsLoading } = useOnChainReviews(walletParam)
 
-  const profile = isOwn ? ownProfile : otherProfile
-  const loading = isOwn ? profileLoading : otherLoading
+  const profile = ownProfile
+  const loading = profileLoading
   const reviewerWallets = [...new Set((onChainReviews || []).map((r) => r.clientWallet).filter(Boolean))]
   const { profiles: reviewerProfiles } = useOnChainProfiles(reviewerWallets)
 

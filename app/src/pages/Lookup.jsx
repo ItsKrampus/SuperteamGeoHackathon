@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { shortenAddress, explorerUrl } from '@/lib/solana'
 import { useOnChainProfile } from '@/hooks/useOnChainProfile'
 import { useOnChainReviews } from '@/hooks/useOnChainReviews'
@@ -16,8 +16,14 @@ function isValidPubkey(input) {
 }
 
 export default function Lookup() {
-  const [searchInput, setSearchInput] = useState('')
-  const [activeWallet, setActiveWallet] = useState(null)
+  const [searchParams] = useSearchParams()
+  const walletParam = searchParams.get('wallet')
+
+  const [searchInput, setSearchInput] = useState(walletParam || '')
+  const [activeWallet, setActiveWallet] = useState(() => {
+    if (walletParam && isValidPubkey(walletParam)) return walletParam
+    return null
+  })
   const [inputError, setInputError] = useState(null)
 
   const { profile, loading: profileLoading, error: profileError } = useOnChainProfile(activeWallet)

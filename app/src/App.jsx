@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Toaster } from 'sonner'
 import { AnchorProvider } from '@/contexts/AnchorContext'
 import { ProfileProvider } from '@/contexts/ProfileContext'
+import { useNotifications } from '@/hooks/useNotifications'
 import NavBar from '@/components/NavBar'
 import Home from '@/pages/Home'
 import Jobs from '@/pages/Jobs'
@@ -45,6 +47,11 @@ function AnimatedRoutes() {
   )
 }
 
+function GlobalNotifications() {
+  useNotifications()
+  return null
+}
+
 function App() {
   return (
     <AnchorProvider>
@@ -54,6 +61,19 @@ function App() {
             <NavBar />
             <AnimatedRoutes />
           </div>
+          <GlobalNotifications />
+          <Toaster
+            theme="dark"
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: '#1a1a1a',
+                border: '1px solid #2a2a2a',
+                color: '#fff',
+                fontFamily: 'var(--font-display)',
+              },
+            }}
+          />
         </BrowserRouter>
       </ProfileProvider>
     </AnchorProvider>
