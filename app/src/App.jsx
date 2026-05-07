@@ -10,6 +10,7 @@ import JobDetail from '@/pages/JobDetail'
 import Profile from '@/pages/Profile'
 import AdminDisputes from '@/pages/AdminDisputes'
 import Dashboard from '@/pages/Dashboard'
+import Lookup from '@/pages/Lookup'
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -36,6 +37,7 @@ function AnimatedRoutes() {
           <Route path="/jobs/new" element={<NewJob />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/profile/:wallet" element={<Profile />} />
+          <Route path="/lookup" element={<Lookup />} />
           <Route path="/admin/disputes" element={<AdminDisputes />} />
         </Routes>
       </motion.div>

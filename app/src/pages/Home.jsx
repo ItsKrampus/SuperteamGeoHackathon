@@ -158,6 +158,9 @@ export default function Home() {
               ) : (
                 <WalletMultiButton />
               )}
+              <Link to="/lookup" className="border border-white/40 text-white/80 px-8 py-4 font-display font-bold uppercase tracking-tighter hover:bg-white/10 hover:text-white transition-all active:scale-95">
+                Explore Identities
+              </Link>
             </div>
           </div>
         </div>

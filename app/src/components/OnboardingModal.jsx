@@ -46,6 +46,31 @@ export default function OnboardingModal({ onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
+            <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">I am a...</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'freelancer', label: 'Freelancer', icon: 'code' },
+                { value: 'client', label: 'Client', icon: 'business_center' },
+                { value: 'both', label: 'Both', icon: 'swap_horiz' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, role: opt.value })}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all text-center ${
+                    form.role === opt.value
+                      ? 'border-[#e63b2e] bg-[#e63b2e]/10 text-white'
+                      : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: form.role === opt.value ? "'FILL' 1" : "'FILL' 0" }}>{opt.icon}</span>
+                  <span className="font-display text-xs uppercase tracking-wider">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
             <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Display Name *</label>
             <input
               className={inputClass}
@@ -63,30 +88,23 @@ export default function OnboardingModal({ onClose }) {
               className={`${inputClass} min-h-[80px] resize-none`}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              placeholder="What do you do? What are you looking for?"
+              placeholder={form.role === 'client' ? 'Tell freelancers about your company or projects' : 'Tell clients about your expertise and experience'}
               maxLength={200}
             />
             <span className="text-[10px] text-zinc-600">{form.bio.length}/200</span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Skills (comma-separated)</label>
-            <input
-              className={inputClass}
-              value={form.skills}
-              onChange={(e) => setForm({ ...form, skills: e.target.value })}
-              placeholder="Rust, React, Solidity, Design"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Role</label>
-            <select className={inputClass} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-              <option value="freelancer">Freelancer</option>
-              <option value="client">Client</option>
-              <option value="both">Both</option>
-            </select>
-          </div>
+          {form.role !== 'client' && (
+            <div className="space-y-1.5">
+              <label className="font-display text-xs text-zinc-500 uppercase tracking-widest">Skills (comma-separated)</label>
+              <input
+                className={inputClass}
+                value={form.skills}
+                onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                placeholder="Rust, React, Solidity, Design"
+              />
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded-lg">
