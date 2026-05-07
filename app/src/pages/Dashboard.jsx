@@ -14,18 +14,25 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!connected || !publicKey) {
+      setClientJobs([])
+      setFreelancerJobs([])
       setLoading(false)
       return
     }
     const wallet = publicKey.toBase58()
-    Promise.all([
-      db.jobs.list({ clientWallet: wallet }),
-      db.jobs.list({ freelancerWallet: wallet }),
-    ]).then(([cJobs, fJobs]) => {
-      setClientJobs(cJobs)
-      setFreelancerJobs(fJobs)
-      setLoading(false)
+    let loadCount = 0
+    const checkDone = () => { if (++loadCount >= 2) setLoading(false) }
+
+    const unsub1 = db.jobs.subscribeByClient(wallet, (jobs) => {
+      setClientJobs(jobs)
+      checkDone()
     })
+    const unsub2 = db.jobs.subscribeByFreelancer(wallet, (jobs) => {
+      setFreelancerJobs(jobs)
+      checkDone()
+    })
+
+    return () => { unsub1(); unsub2() }
   }, [connected, publicKey])
 
   if (!connected) {

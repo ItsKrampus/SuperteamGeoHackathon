@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
@@ -66,18 +66,14 @@ export default function JobDetail() {
     if (p?.displayName) nameMap[addr] = p.displayName
   }
 
-  const refresh = useCallback(async () => {
-    const jobData = await db.jobs.get(clientWallet, jobId)
-    setJob(jobData)
-    const apps = await db.applications.listForJob(clientWallet, jobId)
-    setApplications(apps)
-
-    setLoading(false)
-  }, [clientWallet, jobId, connected, wallet, connection])
-
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    const unsubJob = db.jobs.subscribeOne(clientWallet, jobId, (data) => {
+      setJob(data)
+      setLoading(false)
+    })
+    const unsubApps = db.applications.subscribeForJob(clientWallet, jobId, setApplications)
+    return () => { unsubJob(); unsubApps() }
+  }, [clientWallet, jobId])
 
   useEffect(() => {
     if (!job?.freelancerWallet || (!isClient && !isFreelancer)) return
@@ -109,7 +105,6 @@ export default function JobDetail() {
       coverLetter,
     })
     setCoverLetter('')
-    refresh()
   }
 
   async function handleAccept(app) {
@@ -127,7 +122,6 @@ export default function JobDetail() {
       })
       await db.applications.updateStatus(app.id, 'accepted')
       setTxResult({ type: 'success', message: 'Freelancer accepted', txSig: tx })
-      refresh()
     } catch (err) {
       console.error('Accept freelancer failed:', err)
       setTxResult({ type: 'error', message: err.message })
@@ -164,7 +158,6 @@ export default function JobDetail() {
         await db.jobs.update(clientWallet, jobId, { status: 'cancelled' })
         setTxResult({ type: 'success', message: 'Job cancelled, funds refunded', txSig: result.tx })
       }
-      refresh()
     } catch (err) {
       console.error(`Action ${action} failed:`, err)
       setTxResult({ type: 'error', message: err.message })
@@ -196,7 +189,6 @@ export default function JobDetail() {
 
       setShowReviewModal(false)
       setTxResult({ type: 'success', message: 'Soulbound review NFT minted', txSig, mintAddress })
-      refresh()
     } catch (err) {
       console.error('NFT mint failed:', err)
       setTxResult({ type: 'error', message: `Review mint failed: ${err.message}` })

@@ -66,6 +66,29 @@ export const firestoreDb = {
       await updateDoc(docRef, updates)
       return { ...snap.data(), ...updates }
     },
+
+    subscribeByClient(wallet, callback) {
+      const q = query(collection(fireDb, 'jobs'), where('clientWallet', '==', wallet))
+      return onSnapshot(q, (snap) => {
+        const jobs = snap.docs.map((d) => d.data()).sort((a, b) => b.createdAt - a.createdAt)
+        callback(jobs)
+      }, (err) => console.error('Jobs client subscription error:', err))
+    },
+
+    subscribeByFreelancer(wallet, callback) {
+      const q = query(collection(fireDb, 'jobs'), where('freelancerWallet', '==', wallet))
+      return onSnapshot(q, (snap) => {
+        const jobs = snap.docs.map((d) => d.data()).sort((a, b) => b.createdAt - a.createdAt)
+        callback(jobs)
+      }, (err) => console.error('Jobs freelancer subscription error:', err))
+    },
+
+    subscribeOne(clientWallet, jobId, callback) {
+      const docRef = doc(fireDb, 'jobs', `${clientWallet}_${jobId}`)
+      return onSnapshot(docRef, (snap) => {
+        callback(snap.exists() ? snap.data() : null)
+      }, (err) => console.error('Job subscription error:', err))
+    },
   },
 
   applications: {
@@ -86,6 +109,7 @@ export const firestoreDb = {
         createdAt: Date.now(),
       })
       await setDoc(doc(fireDb, 'applications', id), record)
+      await updateDoc(doc(fireDb, 'jobs', `${data.clientWallet}_${data.jobId}`), { updatedAt: Date.now() })
       return record
     },
 
@@ -96,6 +120,17 @@ export const firestoreDb = {
       const updates = { status, updatedAt: Date.now() }
       await updateDoc(docRef, updates)
       return { ...snap.data(), ...updates }
+    },
+
+    subscribeForJob(clientWallet, jobId, callback) {
+      const q = query(collection(fireDb, 'applications'))
+      return onSnapshot(q, (snap) => {
+        const apps = snap.docs
+          .map((d) => d.data())
+          .filter((a) => a.clientWallet === clientWallet && a.jobId === String(jobId))
+          .sort((a, b) => b.createdAt - a.createdAt)
+        callback(apps)
+      }, (err) => console.error('Applications subscription error:', err))
     },
   },
 
