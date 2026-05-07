@@ -12,6 +12,7 @@ import {
   cancelJob,
 } from '@/lib/anchor/instructions'
 import { mintReviewNft } from '@/lib/nft/mintReviewNft'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import ReviewModal from '@/components/ReviewModal'
 import { useProfile } from '@/contexts/ProfileContext'
@@ -383,7 +384,13 @@ export default function JobDetail() {
                     const isMine = msg.senderWallet === publicKey?.toBase58()
                     const senderName = nameMap[msg.senderWallet] || shortenAddress(msg.senderWallet)
                     return (
-                      <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, x: isMine ? 16 : -16, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                        className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}
+                      >
                         <span className="text-[10px] text-neutral-500 font-display uppercase tracking-widest mb-1">
                           {senderName}
                         </span>
@@ -393,7 +400,7 @@ export default function JobDetail() {
                         <span className="text-[9px] text-neutral-600 mt-1">
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                      </div>
+                      </motion.div>
                     )
                   })}
                   <div ref={chatEndRef} />
