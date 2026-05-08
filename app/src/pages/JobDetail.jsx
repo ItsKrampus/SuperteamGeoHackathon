@@ -43,6 +43,7 @@ export default function JobDetail() {
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewLoading, setReviewLoading] = useState(false)
   const [txResult, setTxResult] = useState(null)
+  const [confirmAction, setConfirmAction] = useState(null)
   const [messages, setMessages] = useState([])
   const [msgText, setMsgText] = useState('')
   const chatEndRef = useRef(null)
@@ -228,9 +229,21 @@ export default function JobDetail() {
           </div>
           <div className="flex items-center gap-3">
             {isClient && job.status === 'funded' && !job.freelancerWallet && (
-              <Button variant="outline" onClick={() => handleAction('cancel')} disabled={actionLoading}>
-                Cancel & Refund
-              </Button>
+              confirmAction === 'cancel' ? (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">
+                  <span className="text-xs text-red-400 font-display">Cancel this job and refund escrow?</span>
+                  <Button size="sm" variant="destructive" onClick={() => { setConfirmAction(null); handleAction('cancel') }} disabled={actionLoading}>
+                    Yes, Refund
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setConfirmAction(null)}>
+                    No
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => setConfirmAction('cancel')} disabled={actionLoading}>
+                  Cancel & Refund
+                </Button>
+              )
             )}
             {isFreelancer && job.status === 'inProgress' && (
               <Button variant="brand" onClick={() => handleAction('submit')} disabled={actionLoading}>
@@ -243,9 +256,21 @@ export default function JobDetail() {
               </Button>
             )}
             {(isClient || isFreelancer) && (job.status === 'inProgress' || job.status === 'submitted') && (
-              <Button variant="destructive" onClick={() => handleAction('dispute')} disabled={actionLoading}>
-                Dispute
-              </Button>
+              confirmAction === 'dispute' ? (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">
+                  <span className="text-xs text-red-400 font-display">File a dispute on this job?</span>
+                  <Button size="sm" variant="destructive" onClick={() => { setConfirmAction(null); handleAction('dispute') }} disabled={actionLoading}>
+                    Yes, Dispute
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setConfirmAction(null)}>
+                    No
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="destructive" onClick={() => setConfirmAction('dispute')} disabled={actionLoading}>
+                  Dispute
+                </Button>
+              )
             )}
           </div>
         </div>

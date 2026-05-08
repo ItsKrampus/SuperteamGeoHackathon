@@ -14,10 +14,6 @@ export default function Profile() {
   const { publicKey, connected } = useWallet()
   const isOwn = connected && publicKey?.toBase58() === walletParam
 
-  if (!isOwn) {
-    return <Navigate to={`/lookup?wallet=${walletParam}`} replace />
-  }
-
   const { profile: ownProfile, needsOnboarding, updateProfile, mintAddress, loading: profileLoading } = useProfile()
   const { reviews: onChainReviews, loading: reviewsLoading } = useOnChainReviews(walletParam)
 
@@ -33,6 +29,10 @@ export default function Profile() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
+
+  if (!isOwn) {
+    return <Navigate to={`/lookup?wallet=${walletParam}`} replace />
+  }
 
   useEffect(() => {
     if (profile) {
