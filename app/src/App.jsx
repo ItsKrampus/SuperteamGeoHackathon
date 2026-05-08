@@ -1,9 +1,11 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Toaster } from 'sonner'
+import { Toaster, toast } from 'sonner'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { AnchorProvider } from '@/contexts/AnchorContext'
 import { ProfileProvider } from '@/contexts/ProfileContext'
 import { useNotifications } from '@/hooks/useNotifications'
+import { ADMIN_PUBKEY } from '@/lib/solana'
 import NavBar from '@/components/NavBar'
 import Home from '@/pages/Home'
 import Jobs from '@/pages/Jobs'
@@ -13,6 +15,7 @@ import Profile from '@/pages/Profile'
 import AdminDisputes from '@/pages/AdminDisputes'
 import Dashboard from '@/pages/Dashboard'
 import Lookup from '@/pages/Lookup'
+import NotFound from '@/pages/NotFound'
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -34,17 +37,35 @@ function AnimatedRoutes() {
       >
         <Routes location={location}>
           <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/new" element={<NewJob />} />
+          <Route path="/jobs/new" element={<ProtectedRoute><NewJob /></ProtectedRoute>} />
           <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/profile/:wallet" element={<Profile />} />
+          <Route path="/profile/:wallet" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/lookup" element={<Lookup />} />
-          <Route path="/admin/disputes" element={<AdminDisputes />} />
+          <Route path="/admin/disputes" element={<AdminRoute><AdminDisputes /></AdminRoute>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
   )
+}
+
+function ProtectedRoute({ children }) {
+  const { connected } = useWallet()
+  if (!connected) {
+    toast('Connect your wallet to access this page', { id: 'auth-guard' })
+    return <Navigate to="/" replace />
+  }
+  return children
+}
+
+function AdminRoute({ children }) {
+  const { publicKey, connected } = useWallet()
+  if (!connected || !publicKey?.equals(ADMIN_PUBKEY)) {
+    return <Navigate to="/" replace />
+  }
+  return children
 }
 
 function GlobalNotifications() {

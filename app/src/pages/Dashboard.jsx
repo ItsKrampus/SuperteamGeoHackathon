@@ -35,14 +35,6 @@ export default function Dashboard() {
     return () => { unsub1(); unsub2() }
   }, [connected, publicKey])
 
-  if (!connected) {
-    return (
-      <div className="pt-24 min-h-screen flex items-center justify-center">
-        <p className="text-neutral-500">Connect your wallet to view your dashboard.</p>
-      </div>
-    )
-  }
-
   if (loading) {
     return (
       <div className="pt-24 min-h-screen flex items-center justify-center">

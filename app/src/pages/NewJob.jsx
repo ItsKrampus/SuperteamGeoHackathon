@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useProfile } from '@/contexts/ProfileContext'
 
 export default function NewJob() {
-  const { publicKey, connected } = useWallet()
+  const { publicKey } = useWallet()
   const wallet = useWallet()
   const { connection } = useConnection()
   const navigate = useNavigate()
@@ -22,14 +22,6 @@ export default function NewJob() {
   const [error, setError] = useState(null)
 
   const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
-
-  if (!connected) {
-    return (
-      <div className="max-w-2xl mx-auto p-8 pt-24 text-center">
-        <p className="text-neutral-400">Connect your wallet to post a job.</p>
-      </div>
-    )
-  }
 
   if (profile?.role === 'freelancer') {
     return (
