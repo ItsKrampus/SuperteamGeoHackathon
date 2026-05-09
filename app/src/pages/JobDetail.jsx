@@ -300,7 +300,7 @@ export default function JobDetail() {
 
               {job.freelancerWallet && (
                 <div className="mt-6 flex items-center gap-3 p-4 bg-neutral-900/50 border border-neutral-800 rounded">
-                  <span className="material-symbols-outlined text-[#537aff]">person</span>
+                  <img src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${job.freelancerWallet}`} alt="" className="w-8 h-8 rounded bg-zinc-800" />
                   <div>
                     <p className="text-[10px] text-neutral-500 uppercase tracking-widest">Assigned Freelancer</p>
                     <Link to={`/profile/${job.freelancerWallet}`} className="text-white text-sm hover:text-[#e63b2e] transition-colors">

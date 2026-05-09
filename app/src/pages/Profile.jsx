@@ -123,9 +123,11 @@ export default function Profile() {
         <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex items-start gap-6">
             <div className="relative">
-              <div className="w-32 h-32 rounded-lg bg-zinc-800 border-4 border-zinc-800 shadow-2xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-5xl text-zinc-600">person</span>
-              </div>
+              <img
+                src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${walletParam}`}
+                alt="Profile avatar"
+                className="w-32 h-32 rounded-lg border-4 border-zinc-800 shadow-2xl bg-zinc-800"
+              />
               {profile?.onChain && (
                 <div className="absolute -bottom-2 -right-2 bg-[#e63b2e] text-white p-1.5 rounded-full shadow-lg border-2 border-zinc-900">
                   <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>

@@ -85,7 +85,7 @@ function App() {
           <GlobalNotifications />
           <Toaster
             theme="dark"
-            position="top-right"
+            position="bottom-right"
             toastOptions={{
               style: {
                 background: '#1a1a1a',

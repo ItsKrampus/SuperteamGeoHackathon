@@ -131,9 +131,11 @@ export default function Lookup() {
               {profile ? (
                 <div className="flex flex-col md:flex-row items-start gap-6">
                   <div className="relative shrink-0">
-                    <div className="w-24 h-24 rounded-lg bg-zinc-800 border-4 border-zinc-800 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl text-zinc-600">person</span>
-                    </div>
+                    <img
+                      src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${activeWallet}`}
+                      alt="Profile avatar"
+                      className="w-24 h-24 rounded-lg border-4 border-zinc-800 bg-zinc-800"
+                    />
                     {profile.onChain && (
                       <div className="absolute -bottom-2 -right-2 bg-[#e63b2e] text-white p-1.5 rounded-full shadow-lg border-2 border-[#242424]">
                         <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>

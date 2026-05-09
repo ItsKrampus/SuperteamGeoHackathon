@@ -1,38 +1,42 @@
 # PROOFWORK
 
-**Decentralized Freelance Marketplace on Solana**
+**Trustless Escrow & Portable Reputation Protocol on Solana**
 
-ProofWork eliminates the middlemen, platform fees, and trust issues that plague traditional freelancing platforms. Jobs are secured by programmable on-chain escrow, payments settle instantly, and every completed review is minted as a Soulbound NFT — giving freelancers a portable, verifiable reputation they truly own.
+ProofWork is a protocol that provides two primitives any marketplace can plug into: **programmatic escrow** (funds lock in on-chain PDAs, released by code not a company) and **soulbound reputation** (non-transferable NFT reviews that live in your wallet forever). Together, they replace the trust layer that platforms like Upwork charge 19% to provide.
 
-> Live on Solana Devnet — [superteamgeohackathon.netlify.app](https://superteamgeohackathon.netlify.app)
+The freelance marketplace is the first app built on the protocol. But the same two building blocks power any service marketplace — bounty boards, security audits, art commissions, grant disbursement, tutoring, service DAOs.
+
+> Live on Solana Devnet — [proofworksol.netlify.app](https://proofworksol.netlify.app)
 
 ---
 
-## Why ProofWork Over Upwork?
+## The Problem
 
-| Problem with Upwork | ProofWork Solution |
+Every online marketplace charges you to trust them. Upwork made $788M last year just sitting in the middle. Leave the platform? Your reputation stays behind — zero portability. Your money sits in their bank account, and they decide when you get paid. This isn't unique to freelancing — it's how every marketplace works.
+
+## The Protocol
+
+Two primitives. No middleman.
+
+1. **Programmatic Escrow** — Client posts a job, SOL locks in a PDA. Code releases funds on approval, not a company.
+2. **Soulbound Reputation** — On completion, a non-transferable Token-2022 NFT review is minted into the worker's wallet. Any app on Solana can read it.
+
+## Cross-Platform Vision
+
+Think Stripe — Stripe doesn't run a store, it powers payments for every store. ProofWork doesn't run a marketplace, it powers trust for every marketplace.
+
+| Use Case | How It Works |
 |---|---|
-| **20% platform fee** on freelancer earnings | **0% protocol fee** — funds go directly from client to freelancer |
-| Disputes resolved by opaque internal teams | **On-chain arbitration** with transparent dispute resolution |
-| Reputation locked inside Upwork's walled garden | **Soulbound NFT reviews** — portable, on-chain, owned by the freelancer |
-| Payment delays of 5-14 days after job completion | **Instant settlement** — funds release the moment work is approved |
-| Platform can freeze funds or ban accounts arbitrarily | **Programmatic escrow** — funds are secured in PDAs, not controlled by any company |
-| Reviews can be deleted or manipulated by the platform | **Immutable reviews** minted as non-transferable tokens on Solana |
-
-### The Core UX Improvement
-
-Traditional freelance platforms insert themselves as a trusted third party and charge for that privilege. ProofWork replaces that trust layer with smart contracts:
-
-1. **Client posts a job** → funds are locked in an on-chain escrow PDA
-2. **Freelancer applies and gets accepted** → work begins with payment already guaranteed
-3. **Work is submitted and approved** → escrow releases funds instantly to the freelancer's wallet
-4. **Client leaves a review** → minted as a Soulbound Token (SBT) that the freelancer carries forever
-
-No waiting periods. No fee deductions. No platform risk.
+| Bounty Boards | DAO posts task → escrow locks funds → contributor delivers → reputation minted |
+| Audit Markets | Protocol posts audit → escrow secures payment → auditor delivers report |
+| Commissions | Client requests art/design/music → escrow guarantees payment on delivery |
+| Grant Disbursement | Foundation funds milestone-based grants with escrow release on completion |
+| Tutoring | Session-based escrow for 1:1 learning |
+| Service DAOs | Agency contracts with multi-party escrow |
 
 ---
 
-## How to Use the App
+## How to Use the App (ProofWork Marketplace)
 
 ### Prerequisites
 
@@ -85,12 +89,14 @@ Click any wallet address in the app to view that user's profile — their skills
 | Layer | Technology |
 |---|---|
 | Blockchain | Solana (Devnet) |
-| Smart Contracts | Anchor Framework (Rust) |
+| Smart Contracts | Anchor 0.31.1 (Rust) |
 | Frontend | React 19, Vite 8, Tailwind CSS v4 |
 | Wallet Integration | Solana Wallet Adapter |
 | Soulbound NFTs | Token-2022 (NonTransferable + MetadataPointer) |
-| Data Layer | localStorage (demo) |
-| Design System | Space Grotesk + Inter, neo-brutalist aesthetic |
+| Data Layer | Firebase / Firestore (real-time sync) |
+| Real-Time | Firestore subscriptions for chat, notifications, live dashboard updates |
+| Avatars | DiceBear pixel-art (deterministic, seeded by wallet address) |
+| Design System | Space Grotesk + Inter, neo-brutalist dark theme |
 
 ## Architecture
 
